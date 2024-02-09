@@ -1,0 +1,491 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model ADDOProduct {
+  id                                           String                @id
+  genericName                                  String                @default("")
+  brandName                                    String                @default("")
+  dosageType                                   String?
+  medicineStrength                             String                @default("")
+  adminstrationType                            String?
+  compoundKey                                  String                @unique @default("")
+  createdAt                                    DateTime?             @default(now())
+  updatedAt                                    DateTime?
+  createdBy                                    String?
+  updatedBy                                    String?
+  Option_ADDOProduct_adminstrationTypeToOption Option?               @relation("ADDOProduct_adminstrationTypeToOption", fields: [adminstrationType], references: [id])
+  User_ADDOProduct_createdByToUser             User?                 @relation("ADDOProduct_createdByToUser", fields: [createdBy], references: [id])
+  Option_ADDOProduct_dosageTypeToOption        Option?               @relation("ADDOProduct_dosageTypeToOption", fields: [dosageType], references: [id])
+  User_ADDOProduct_updatedByToUser             User?                 @relation("ADDOProduct_updatedByToUser", fields: [updatedBy], references: [id])
+  ProductAdjustment                            ProductAdjustment[]
+  ProductSale                                  ProductSale[]
+  ProductStock                                 ProductStock[]
+  ProductStockHistory                          ProductStockHistory[]
+
+  @@index([adminstrationType])
+  @@index([brandName])
+  @@index([createdBy])
+  @@index([dosageType])
+  @@index([genericName])
+  @@index([medicineStrength])
+  @@index([updatedBy])
+}
+
+model Addo {
+  id                        String                @id
+  registrationNumber        String                @default("")
+  name                      String                @default("")
+  region                    String?
+  district                  String?
+  createdAt                 DateTime?             @default(now())
+  updatedAt                 DateTime?
+  createdBy                 String?
+  updatedBy                 String?
+  User_Addo_createdByToUser User?                 @relation("Addo_createdByToUser", fields: [createdBy], references: [id])
+  District                  District?             @relation(fields: [district], references: [id])
+  Region                    Region?               @relation(fields: [region], references: [id])
+  User_Addo_updatedByToUser User?                 @relation("Addo_updatedByToUser", fields: [updatedBy], references: [id])
+  Expense                   Expense[]
+  ProductAdjustment         ProductAdjustment[]
+  ProductSale               ProductSale[]
+  ProductStock              ProductStock[]
+  ProductStockHistory       ProductStockHistory[]
+  Sale                      Sale[]
+  SpecialProduct            SpecialProduct[]
+  Supplier                  Supplier[]
+  User_User_addo            User[]                @relation("User_addo")
+
+  @@index([createdBy])
+  @@index([district])
+  @@index([name])
+  @@index([region])
+  @@index([updatedBy])
+}
+
+model AddoRegistration {
+  id                                    String    @id
+  registrationNumber                    String    @unique @default("")
+  premise                               String    @default("")
+  owner                                 String    @default("")
+  ward                                  String    @default("")
+  district                              String    @default("")
+  region                                String    @default("")
+  address                               String    @default("")
+  createdAt                             DateTime? @default(now())
+  updatedAt                             DateTime?
+  createdBy                             String?
+  updatedBy                             String?
+  User_AddoRegistration_createdByToUser User?     @relation("AddoRegistration_createdByToUser", fields: [createdBy], references: [id])
+  User_AddoRegistration_updatedByToUser User?     @relation("AddoRegistration_updatedByToUser", fields: [updatedBy], references: [id])
+
+  @@index([address])
+  @@index([createdBy])
+  @@index([district])
+  @@index([owner])
+  @@index([premise])
+  @@index([region])
+  @@index([updatedBy])
+  @@index([ward])
+}
+
+model District {
+  id                            String    @id
+  name                          String    @unique @default("")
+  region                        String?
+  createdAt                     DateTime? @default(now())
+  updatedAt                     DateTime?
+  createdBy                     String?
+  updatedBy                     String?
+  Addo                          Addo[]
+  User_District_createdByToUser User?     @relation("District_createdByToUser", fields: [createdBy], references: [id])
+  Region                        Region?   @relation(fields: [region], references: [id])
+  User_District_updatedByToUser User?     @relation("District_updatedByToUser", fields: [updatedBy], references: [id])
+
+  @@index([createdBy])
+  @@index([region])
+  @@index([updatedBy])
+}
+
+model Expense {
+  id                           String    @id
+  date                         DateTime  @db.Date
+  details                      String    @default("")
+  amount                       Float?    @default(0)
+  createdAt                    DateTime? @default(now())
+  updatedAt                    DateTime?
+  createdBy                    String?
+  updatedBy                    String?
+  addo                         String?
+  type                         String?
+  Addo                         Addo?     @relation(fields: [addo], references: [id])
+  User_Expense_createdByToUser User?     @relation("Expense_createdByToUser", fields: [createdBy], references: [id])
+  Option                       Option?   @relation(fields: [type], references: [id])
+  User_Expense_updatedByToUser User?     @relation("Expense_updatedByToUser", fields: [updatedBy], references: [id])
+
+  @@index([addo])
+  @@index([createdBy])
+  @@index([details])
+  @@index([type])
+  @@index([updatedBy])
+}
+
+model Option {
+  id                                                          String                @id
+  type                                                        String?
+  key                                                         String                @unique @default("")
+  en                                                          String                @unique @default("")
+  sw                                                          String                @unique @default("")
+  createdAt                                                   DateTime?             @default(now())
+  updatedAt                                                   DateTime?
+  createdBy                                                   String?
+  updatedBy                                                   String?
+  ADDOProduct_ADDOProduct_adminstrationTypeToOption           ADDOProduct[]         @relation("ADDOProduct_adminstrationTypeToOption")
+  ADDOProduct_ADDOProduct_dosageTypeToOption                  ADDOProduct[]         @relation("ADDOProduct_dosageTypeToOption")
+  Expense                                                     Expense[]
+  User_Option_createdByToUser                                 User?                 @relation("Option_createdByToUser", fields: [createdBy], references: [id])
+  OptionType                                                  OptionType?           @relation(fields: [type], references: [id])
+  User_Option_updatedByToUser                                 User?                 @relation("Option_updatedByToUser", fields: [updatedBy], references: [id])
+  ProductAdjustment                                           ProductAdjustment[]
+  ProductStock_ProductStock_sellingUnitToOption               ProductStock[]        @relation("ProductStock_sellingUnitToOption")
+  ProductStock_ProductStock_storageUnitToOption               ProductStock[]        @relation("ProductStock_storageUnitToOption")
+  ProductStockHistory_ProductStockHistory_sellingUnitToOption ProductStockHistory[] @relation("ProductStockHistory_sellingUnitToOption")
+  ProductStockHistory_ProductStockHistory_storageUnitToOption ProductStockHistory[] @relation("ProductStockHistory_storageUnitToOption")
+  Sale_Sale_customerAgeToOption                               Sale[]                @relation("Sale_customerAgeToOption")
+  Sale_Sale_customerGenderToOption                            Sale[]                @relation("Sale_customerGenderToOption")
+  Sale_Sale_patientTypeToOption                               Sale[]                @relation("Sale_patientTypeToOption")
+  SpecialProduct_SpecialProduct_adminstrationTypeToOption     SpecialProduct[]      @relation("SpecialProduct_adminstrationTypeToOption")
+  SpecialProduct_SpecialProduct_dosageTypeToOption            SpecialProduct[]      @relation("SpecialProduct_dosageTypeToOption")
+
+  @@index([createdBy])
+  @@index([type])
+  @@index([updatedBy])
+}
+
+model OptionType {
+  id                              String    @id
+  name                            String    @unique @default("")
+  createdAt                       DateTime? @default(now())
+  updatedAt                       DateTime?
+  createdBy                       String?
+  updatedBy                       String?
+  Option                          Option[]
+  User_OptionType_createdByToUser User?     @relation("OptionType_createdByToUser", fields: [createdBy], references: [id])
+  User_OptionType_updatedByToUser User?     @relation("OptionType_updatedByToUser", fields: [updatedBy], references: [id])
+
+  @@index([createdBy])
+  @@index([updatedBy])
+}
+
+model ProductAdjustment {
+  id                                     String          @id
+  adjustmentDate                         DateTime        @db.Date
+  adjustmentReason                       String?
+  newQuantity                            Float?          @default(0)
+  newPrice                               Float?          @default(0)
+  createdAt                              DateTime?       @default(now())
+  updatedAt                              DateTime?
+  createdBy                              String?
+  updatedBy                              String?
+  addoProduct                            String?
+  specialProduct                         String?
+  addo                                   String?
+  pricePerStorageUnit                    Float?          @default(0)
+  stock                                  String?
+  ADDOProduct                            ADDOProduct?    @relation(fields: [addoProduct], references: [id])
+  Addo                                   Addo?           @relation(fields: [addo], references: [id])
+  Option                                 Option?         @relation(fields: [adjustmentReason], references: [id])
+  User_ProductAdjustment_createdByToUser User?           @relation("ProductAdjustment_createdByToUser", fields: [createdBy], references: [id])
+  SpecialProduct                         SpecialProduct? @relation(fields: [specialProduct], references: [id])
+  ProductStock                           ProductStock?   @relation(fields: [stock], references: [id])
+  User_ProductAdjustment_updatedByToUser User?           @relation("ProductAdjustment_updatedByToUser", fields: [updatedBy], references: [id])
+
+  @@index([addoProduct])
+  @@index([addo])
+  @@index([adjustmentReason])
+  @@index([createdBy])
+  @@index([specialProduct])
+  @@index([stock])
+  @@index([updatedBy])
+}
+
+model ProductSale {
+  id                               String          @id
+  quantity                         Float?          @default(0)
+  price                            Float?          @default(0)
+  subtotal                         Float?          @default(0)
+  discount                         Float?          @default(0)
+  addoProduct                      String?
+  specialProduct                   String?
+  addo                             String?
+  createdAt                        DateTime?       @default(now())
+  updatedAt                        DateTime?
+  createdBy                        String?
+  updatedBy                        String?
+  ADDOProduct                      ADDOProduct?    @relation(fields: [addoProduct], references: [id])
+  Addo                             Addo?           @relation(fields: [addo], references: [id])
+  User_ProductSale_createdByToUser User?           @relation("ProductSale_createdByToUser", fields: [createdBy], references: [id])
+  SpecialProduct                   SpecialProduct? @relation(fields: [specialProduct], references: [id])
+  User_ProductSale_updatedByToUser User?           @relation("ProductSale_updatedByToUser", fields: [updatedBy], references: [id])
+  Sale                             Sale[]          @relation("Sale_products")
+
+  @@index([addoProduct])
+  @@index([addo])
+  @@index([createdBy])
+  @@index([specialProduct])
+  @@index([updatedBy])
+}
+
+model ProductStock {
+  id                                                          String                @id
+  supplier                                                    String?
+  storageUnit                                                 String?
+  sellingUnit                                                 String?
+  quantity                                                    Float?                @default(0)
+  reorderQuantity                                             Float?                @default(0)
+  pricePerStorageUnit                                         Float?                @default(0)
+  sellingPricePerStorageUnit                                  Float?                @default(0)
+  addoProduct                                                 String?
+  specialProduct                                              String?
+  expiryDate                                                  DateTime?             @db.Date
+  batchNumber                                                 String                @default("")
+  createdAt                                                   DateTime?             @default(now())
+  updatedAt                                                   DateTime?
+  createdBy                                                   String?
+  updatedBy                                                   String?
+  addo                                                        String?
+  addedDate                                                   DateTime?             @db.Date
+  ProductAdjustment                                           ProductAdjustment[]
+  ADDOProduct                                                 ADDOProduct?          @relation(fields: [addoProduct], references: [id])
+  Addo                                                        Addo?                 @relation(fields: [addo], references: [id])
+  User_ProductStock_createdByToUser                           User?                 @relation("ProductStock_createdByToUser", fields: [createdBy], references: [id])
+  Option_ProductStock_sellingUnitToOption                     Option?               @relation("ProductStock_sellingUnitToOption", fields: [sellingUnit], references: [id])
+  SpecialProduct                                              SpecialProduct?       @relation(fields: [specialProduct], references: [id])
+  Option_ProductStock_storageUnitToOption                     Option?               @relation("ProductStock_storageUnitToOption", fields: [storageUnit], references: [id])
+  Supplier                                                    Supplier?             @relation(fields: [supplier], references: [id])
+  User_ProductStock_updatedByToUser                           User?                 @relation("ProductStock_updatedByToUser", fields: [updatedBy], references: [id])
+  ProductStockHistory_ProductStockHistory_stockToProductStock ProductStockHistory[] @relation("ProductStockHistory_stockToProductStock")
+  ProductStockHistory_ProductStock_history                    ProductStockHistory[] @relation("ProductStock_history")
+
+  @@index([addoProduct])
+  @@index([addo])
+  @@index([batchNumber])
+  @@index([createdBy])
+  @@index([sellingUnit])
+  @@index([specialProduct])
+  @@index([storageUnit])
+  @@index([supplier])
+  @@index([updatedBy])
+}
+
+model ProductStockHistory {
+  id                                                   String          @id
+  supplier                                             String?
+  storageUnit                                          String?
+  sellingUnit                                          String?
+  quantity                                             Float?          @default(0)
+  reorderQuantity                                      Float?          @default(0)
+  pricePerStorageUnit                                  Float?          @default(0)
+  sellingPricePerStorageUnit                           Float?          @default(0)
+  addoProduct                                          String?
+  specialProduct                                       String?
+  expiryDate                                           DateTime?       @db.Date
+  batchNumber                                          String          @default("")
+  addo                                                 String?
+  stock                                                String?
+  createdAt                                            DateTime?       @default(now())
+  updatedAt                                            DateTime?
+  createdBy                                            String?
+  updatedBy                                            String?
+  ADDOProduct                                          ADDOProduct?    @relation(fields: [addoProduct], references: [id])
+  Addo                                                 Addo?           @relation(fields: [addo], references: [id])
+  User_ProductStockHistory_createdByToUser             User?           @relation("ProductStockHistory_createdByToUser", fields: [createdBy], references: [id])
+  Option_ProductStockHistory_sellingUnitToOption       Option?         @relation("ProductStockHistory_sellingUnitToOption", fields: [sellingUnit], references: [id])
+  SpecialProduct                                       SpecialProduct? @relation(fields: [specialProduct], references: [id])
+  ProductStock_ProductStockHistory_stockToProductStock ProductStock?   @relation("ProductStockHistory_stockToProductStock", fields: [stock], references: [id])
+  Option_ProductStockHistory_storageUnitToOption       Option?         @relation("ProductStockHistory_storageUnitToOption", fields: [storageUnit], references: [id])
+  Supplier                                             Supplier?       @relation(fields: [supplier], references: [id])
+  User_ProductStockHistory_updatedByToUser             User?           @relation("ProductStockHistory_updatedByToUser", fields: [updatedBy], references: [id])
+  ProductStock_ProductStock_history                    ProductStock[]  @relation("ProductStock_history")
+
+  @@index([addoProduct])
+  @@index([addo])
+  @@index([batchNumber])
+  @@index([createdBy])
+  @@index([sellingUnit])
+  @@index([specialProduct])
+  @@index([stock])
+  @@index([storageUnit])
+  @@index([supplier])
+  @@index([updatedBy])
+}
+
+model Region {
+  id                          String     @id
+  name                        String     @unique @default("")
+  createdAt                   DateTime?  @default(now())
+  updatedAt                   DateTime?
+  createdBy                   String?
+  updatedBy                   String?
+  Addo                        Addo[]
+  District                    District[]
+  User_Region_createdByToUser User?      @relation("Region_createdByToUser", fields: [createdBy], references: [id])
+  User_Region_updatedByToUser User?      @relation("Region_updatedByToUser", fields: [updatedBy], references: [id])
+
+  @@index([createdBy])
+  @@index([updatedBy])
+}
+
+model Sale {
+  id                                 String        @id
+  sellingDate                        DateTime?     @db.Date
+  patientType                        String?
+  customerName                       String        @default("")
+  customerGender                     String?
+  customerAge                        String?
+  customePhone                       String        @default("")
+  total                              Float?        @default(0)
+  createdAt                          DateTime?     @default(now())
+  updatedAt                          DateTime?
+  createdBy                          String?
+  updatedBy                          String?
+  discount                           Float?        @default(0)
+  addo                               String?
+  Addo                               Addo?         @relation(fields: [addo], references: [id])
+  User_Sale_createdByToUser          User?         @relation("Sale_createdByToUser", fields: [createdBy], references: [id])
+  Option_Sale_customerAgeToOption    Option?       @relation("Sale_customerAgeToOption", fields: [customerAge], references: [id])
+  Option_Sale_customerGenderToOption Option?       @relation("Sale_customerGenderToOption", fields: [customerGender], references: [id])
+  Option_Sale_patientTypeToOption    Option?       @relation("Sale_patientTypeToOption", fields: [patientType], references: [id])
+  User_Sale_updatedByToUser          User?         @relation("Sale_updatedByToUser", fields: [updatedBy], references: [id])
+  ProductSale                        ProductSale[] @relation("Sale_products")
+
+  @@index([addo])
+  @@index([createdBy])
+  @@index([customePhone])
+  @@index([customerAge])
+  @@index([customerGender])
+  @@index([customerName])
+  @@index([patientType])
+  @@index([updatedBy])
+}
+
+model SpecialProduct {
+  id                                              String                @id
+  genericName                                     String                @default("")
+  brandName                                       String                @default("")
+  dosageType                                      String?
+  medicineStrength                                String                @default("")
+  adminstrationType                               String?
+  createdAt                                       DateTime?             @default(now())
+  updatedAt                                       DateTime?
+  createdBy                                       String?
+  updatedBy                                       String?
+  addo                                            String?
+  ProductAdjustment                               ProductAdjustment[]
+  ProductSale                                     ProductSale[]
+  ProductStock                                    ProductStock[]
+  ProductStockHistory                             ProductStockHistory[]
+  Addo                                            Addo?                 @relation(fields: [addo], references: [id])
+  Option_SpecialProduct_adminstrationTypeToOption Option?               @relation("SpecialProduct_adminstrationTypeToOption", fields: [adminstrationType], references: [id])
+  User_SpecialProduct_createdByToUser             User?                 @relation("SpecialProduct_createdByToUser", fields: [createdBy], references: [id])
+  Option_SpecialProduct_dosageTypeToOption        Option?               @relation("SpecialProduct_dosageTypeToOption", fields: [dosageType], references: [id])
+  User_SpecialProduct_updatedByToUser             User?                 @relation("SpecialProduct_updatedByToUser", fields: [updatedBy], references: [id])
+
+  @@index([addo])
+  @@index([adminstrationType])
+  @@index([brandName])
+  @@index([createdBy])
+  @@index([dosageType])
+  @@index([genericName])
+  @@index([medicineStrength])
+  @@index([updatedBy])
+}
+
+model Supplier {
+  id                            String                @id
+  name                          String                @default("")
+  address                       String                @default("")
+  phone                         String                @default("")
+  email                         String                @default("")
+  createdAt                     DateTime?             @default(now())
+  updatedAt                     DateTime?
+  createdBy                     String?
+  updatedBy                     String?
+  addo                          String?
+  ProductStock                  ProductStock[]
+  ProductStockHistory           ProductStockHistory[]
+  Addo                          Addo?                 @relation(fields: [addo], references: [id])
+  User_Supplier_createdByToUser User?                 @relation("Supplier_createdByToUser", fields: [createdBy], references: [id])
+  User_Supplier_updatedByToUser User?                 @relation("Supplier_updatedByToUser", fields: [updatedBy], references: [id])
+
+  @@index([addo])
+  @@index([address])
+  @@index([createdBy])
+  @@index([email])
+  @@index([name])
+  @@index([phone])
+  @@index([updatedBy])
+}
+
+model User {
+  id                                                      String                @id
+  roles                                                   User_roles            @default(Owner)
+  email                                                   String                @unique @default("")
+  password                                                String
+  name                                                    String                @default("")
+  createdAt                                               DateTime?             @default(now())
+  updatedAt                                               DateTime?
+  createdBy                                               String?
+  updatedBy                                               String?
+  ADDOProduct_ADDOProduct_createdByToUser                 ADDOProduct[]         @relation("ADDOProduct_createdByToUser")
+  ADDOProduct_ADDOProduct_updatedByToUser                 ADDOProduct[]         @relation("ADDOProduct_updatedByToUser")
+  Addo_Addo_createdByToUser                               Addo[]                @relation("Addo_createdByToUser")
+  Addo_Addo_updatedByToUser                               Addo[]                @relation("Addo_updatedByToUser")
+  AddoRegistration_AddoRegistration_createdByToUser       AddoRegistration[]    @relation("AddoRegistration_createdByToUser")
+  AddoRegistration_AddoRegistration_updatedByToUser       AddoRegistration[]    @relation("AddoRegistration_updatedByToUser")
+  District_District_createdByToUser                       District[]            @relation("District_createdByToUser")
+  District_District_updatedByToUser                       District[]            @relation("District_updatedByToUser")
+  Expense_Expense_createdByToUser                         Expense[]             @relation("Expense_createdByToUser")
+  Expense_Expense_updatedByToUser                         Expense[]             @relation("Expense_updatedByToUser")
+  Option_Option_createdByToUser                           Option[]              @relation("Option_createdByToUser")
+  Option_Option_updatedByToUser                           Option[]              @relation("Option_updatedByToUser")
+  OptionType_OptionType_createdByToUser                   OptionType[]          @relation("OptionType_createdByToUser")
+  OptionType_OptionType_updatedByToUser                   OptionType[]          @relation("OptionType_updatedByToUser")
+  ProductAdjustment_ProductAdjustment_createdByToUser     ProductAdjustment[]   @relation("ProductAdjustment_createdByToUser")
+  ProductAdjustment_ProductAdjustment_updatedByToUser     ProductAdjustment[]   @relation("ProductAdjustment_updatedByToUser")
+  ProductSale_ProductSale_createdByToUser                 ProductSale[]         @relation("ProductSale_createdByToUser")
+  ProductSale_ProductSale_updatedByToUser                 ProductSale[]         @relation("ProductSale_updatedByToUser")
+  ProductStock_ProductStock_createdByToUser               ProductStock[]        @relation("ProductStock_createdByToUser")
+  ProductStock_ProductStock_updatedByToUser               ProductStock[]        @relation("ProductStock_updatedByToUser")
+  ProductStockHistory_ProductStockHistory_createdByToUser ProductStockHistory[] @relation("ProductStockHistory_createdByToUser")
+  ProductStockHistory_ProductStockHistory_updatedByToUser ProductStockHistory[] @relation("ProductStockHistory_updatedByToUser")
+  Region_Region_createdByToUser                           Region[]              @relation("Region_createdByToUser")
+  Region_Region_updatedByToUser                           Region[]              @relation("Region_updatedByToUser")
+  Sale_Sale_createdByToUser                               Sale[]                @relation("Sale_createdByToUser")
+  Sale_Sale_updatedByToUser                               Sale[]                @relation("Sale_updatedByToUser")
+  SpecialProduct_SpecialProduct_createdByToUser           SpecialProduct[]      @relation("SpecialProduct_createdByToUser")
+  SpecialProduct_SpecialProduct_updatedByToUser           SpecialProduct[]      @relation("SpecialProduct_updatedByToUser")
+  Supplier_Supplier_createdByToUser                       Supplier[]            @relation("Supplier_createdByToUser")
+  Supplier_Supplier_updatedByToUser                       Supplier[]            @relation("Supplier_updatedByToUser")
+  User_User_createdByToUser                               User?                 @relation("User_createdByToUser", fields: [createdBy], references: [id])
+  other_User_User_createdByToUser                         User[]                @relation("User_createdByToUser")
+  User_User_updatedByToUser                               User?                 @relation("User_updatedByToUser", fields: [updatedBy], references: [id])
+  other_User_User_updatedByToUser                         User[]                @relation("User_updatedByToUser")
+  Addo_User_addo                                          Addo[]                @relation("User_addo")
+
+  @@index([createdBy])
+  @@index([roles])
+  @@index([updatedBy])
+}
+
+enum User_roles {
+  Admin
+  Support
+  Owner
+  Supervisor
+}

@@ -1,3 +1,3 @@
 export default function Page() {
-  return <p>Invoces Page</p>;
+    return <p>Report Page</p>;
 }
