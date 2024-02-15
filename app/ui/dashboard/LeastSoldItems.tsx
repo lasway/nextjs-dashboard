@@ -1,38 +1,37 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchTopProductAddo, fetchTopProductSupervisor, getUser } from '@/app/lib/data';
 import { useEffect, useState } from 'react';
-export default async function TopSoldItems({ region, district, startDate, endDate }: { region: string, district: string, startDate: string, endDate: string }) {
+import { fetchLeastSoldProductsAddo, fetchLeastSoldProductsSupervisor, getUser } from '@/app/lib/data';
+export default async function LeastSoldItems({ region, district, startDate, endDate }: { region: string, district: string, startDate: string, endDate: string }) {
 
-    const [topProducts, setTopProducts] = useState([]);
-
+    const [leastProducts, setLeastProducts] = useState([]);
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const user = await getUser();
                 if (user?.roles === 'Supervisor') {
                     if (startDate && endDate && region && district) {
-                        const topProducts = await fetchTopProductSupervisor(region, district, startDate, endDate);
-                        setTopProducts(topProducts);
+                        const leastProducts = await fetchLeastSoldProductsSupervisor(region, district, startDate, endDate);
+                        setLeastProducts(leastProducts);
                     }
                 }
                 else if (user?.roles === 'Owner') {
                     if (startDate && endDate) {
-                        const topProducts = await fetchTopProductAddo(startDate, endDate);
-                        setTopProducts(topProducts);
+                        const leastProducts = await fetchLeastSoldProductsAddo(startDate, endDate);
+                        setLeastProducts(leastProducts);
                     }
                 }
+
             } catch (error) {
-                console.error('Error fetching top sold items:', error);
+                console.error('Error fetching top products:', error);
             }
         };
         fetchData();
     }, [startDate, endDate, region, district]);
-
     return (
         <div className="flex w-full flex-col md:col-span-4">
             <h2 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>
-                Top Sold Items
+                Least Sold Items
             </h2>
 
 
@@ -42,7 +41,7 @@ export default async function TopSoldItems({ region, district, startDate, endDat
                         <p className="text-sm font-semibold md:text-base">List of Products</p>
                         <p className="text-sm font-semibold md:text-base">Total Quantity</p>
                     </div>
-                    {topProducts.map((product, i) => (
+                    {leastProducts.map((product, i) => (
                         <div
                             key={i}
                             className={`flex flex-row items-center justify-between py-4 ${i !== 0 ? 'border-t' : ''}`}
@@ -69,3 +68,4 @@ export default async function TopSoldItems({ region, district, startDate, endDat
         </div>
     );
 }
+

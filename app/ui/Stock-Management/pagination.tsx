@@ -4,17 +4,51 @@ import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { generatePagination } from '@/app/lib/utils';
+import { useEffect, useState } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { fetchMasterListPages, fetchProductStockPages, getUser } from '@/app/lib/data';
 
-export default function Pagination({ totalPages }: { totalPages: number }) {
+export default function Pagination({ query }: { query: string }) {
   // NOTE: comment in this code when you get to this point in the course
 
-  // const allPages = generatePagination(currentPage, totalPages);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const user = await getUser();
+        if (user?.roles === 'Supervisor') {
+          const totalPages = await fetchMasterListPages(query);
+          setPage(totalPages);
+        } else if (user?.roles === 'Owner') {
+          const totalPages = await fetchProductStockPages(query);
+          setPage(totalPages);
+        }
+      } catch (error) {
+        console.error('Error fetching top products:', error);
+      }
+    };
+    fetchData();
+  }, [query]);
+
+  const [page, setPage] = useState<number>(0);
+
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentPage = parseInt(searchParams.get('page') || '1');
+
+  const createPageURL = (pageNumber: number | string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', pageNumber.toString());
+    return `${pathname}?${params.toString()}`;
+  };
+
+  const allPages = generatePagination(currentPage, page);
+
 
   return (
     <>
       {/* NOTE: comment in this code when you get to this point in the course */}
 
-      {/* <div className="inline-flex">
+      <div className="inline-flex">
         <PaginationArrow
           direction="left"
           href={createPageURL(currentPage - 1)}
@@ -45,9 +79,9 @@ export default function Pagination({ totalPages }: { totalPages: number }) {
         <PaginationArrow
           direction="right"
           href={createPageURL(currentPage + 1)}
-          isDisabled={currentPage >= totalPages}
+          isDisabled={currentPage >= page}
         />
-      </div> */}
+      </div>
     </>
   );
 }

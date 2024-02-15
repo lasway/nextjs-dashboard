@@ -6,10 +6,8 @@ import {
     InboxIcon,
 } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchCardData, fetchProductStock, fetchTopProducts } from '@/app/lib/data';
-import { start } from 'repl';
+import { fetchCardDataAddo, fetchCardDataSupervisor, getUser } from '@/app/lib/data';
 import { useEffect, useState } from 'react';
-import { get } from 'http';
 const iconMap = {
     collected: BanknotesIcon,
     customers: UserGroupIcon,
@@ -17,8 +15,9 @@ const iconMap = {
     invoices: InboxIcon,
 };
 
-export default function CardWrapper({ addo, startDate, endDate }:
-    { addo: string, startDate: string, endDate: string }) {
+export default function CardWrapper({ region, district, startDate, endDate }:
+    { region: string, district: string, startDate: string, endDate: string }) {
+
 
     const [cardData, setCardData] = useState({
         totalSales: 0,
@@ -32,13 +31,18 @@ export default function CardWrapper({ addo, startDate, endDate }:
     useEffect(() => {
         const fetchData = async () => {
             try {
-                if (startDate && endDate) {
-                    const data = await fetchCardData(addo, startDate, endDate);
-                    const stock = await fetchProductStock(addo);
-                    console.log(stock);
-                    // const product = await fetchTopProducts(addo, startDate, endDate);
-                    // console.log(product);
-                    setCardData(data);
+                const user = await getUser();
+                if (user?.roles === 'Supervisor') {
+                    if (startDate && endDate && region && district) {
+                        const cardData = await fetchCardDataSupervisor(region, district, startDate, endDate,);
+                        setCardData(cardData);
+                    }
+                }
+                else if (user?.roles === 'Owner') {
+                    if (startDate && endDate) {
+                        const cardData = await fetchCardDataAddo(startDate, endDate);
+                        setCardData(cardData);
+                    }
                 }
 
             } catch (error) {
@@ -47,7 +51,7 @@ export default function CardWrapper({ addo, startDate, endDate }:
         };
 
         fetchData();
-    }, [addo, startDate, endDate]);
+    }, [startDate, endDate, region, district]);
 
     return (
         <>

@@ -21,15 +21,18 @@ export const formatDateToLocal = (
   return formatter.format(date);
 };
 
-export const generateYAxis = (revenue: Revenue[]) => {
+export const generateYAxis = (data: { date: string, amount: number }[], step: number = 1000, prefix: string = '') => {
+  // Extract amounts from the expense data
+  const amounts = data.map(expense => expense.amount);
+
   // Calculate what labels we need to display on the y-axis
   // based on highest record and in 1000s
   const yAxisLabels = [];
-  const highestRecord = Math.max(...revenue.map((month) => month.revenue));
-  const topLabel = Math.ceil(highestRecord / 1000) * 1000;
+  const highestRecord = Math.max(...amounts);
+  const topLabel = Math.ceil(highestRecord / step) * step;
 
-  for (let i = topLabel; i >= 0; i -= 1000) {
-    yAxisLabels.push(`$${i / 1000}K`);
+  for (let i = topLabel; i >= 0; i -= step) {
+    yAxisLabels.push(`${prefix}${i / 1000}K`);
   }
 
   return { yAxisLabels, topLabel };
