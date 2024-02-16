@@ -24,8 +24,10 @@ export default function CardWrapper({ region, district, startDate, endDate }:
         totalExpenses: 0,
         totalRevenue: 0,
         saleCount: 0,
-        expenseCount: 0,
+        addoCount: 0,
     });
+
+    const [user, setUser] = useState();
 
 
     useEffect(() => {
@@ -45,6 +47,8 @@ export default function CardWrapper({ region, district, startDate, endDate }:
                     }
                 }
 
+                setUser(user);
+
             } catch (error) {
                 console.error('Error fetching card data:', error);
             }
@@ -56,15 +60,26 @@ export default function CardWrapper({ region, district, startDate, endDate }:
     return (
         <>
             {/* NOTE: comment in this code when you get to this point in the course */}
+            {user?.roles === 'Supervisor' ?
+                (
+                    <>
+                        <Card title="Total Sales" value={cardData.totalSales} type="collected" />
+                        <Card title="Total Expenses" value={cardData.totalExpenses} type="pending" />
+                        <Card title="Total Revenue" value={cardData.totalRevenue} type="invoices" />
+                        <Card title="Total Addos" value={cardData.addoCount} type="customers" />
+                    </>
+                )
+                :
+                (
+                    <>
+                        <Card title="Total Sales" value={cardData.totalSales} type="collected" />
+                        <Card title="Total Expenses" value={cardData.totalExpenses} type="pending" />
+                        <Card title="Total Revenue" value={cardData.totalRevenue} type="invoices" />
+                        <Card title="Total Customers" value={cardData.saleCount} type="customers" />
+                    </>
 
-            <Card title="Total Sales" value={cardData.totalSales} type="collected" />
-            <Card title="Total Expenses" value={cardData.totalExpenses} type="pending" />
-            <Card title="Total Revenue" value={cardData.totalRevenue} type="invoices" />
-            <Card
-                title="Total Sales"
-                value={cardData.saleCount}
-                type="customers"
-            />
+                )
+            }
         </>
     );
 }

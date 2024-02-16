@@ -1,8 +1,9 @@
-// import { User } from '@prisma/client';
-import { useState } from 'react';
+import { fetchDistrict, fetchRegion } from '@/app/lib/data';
+import { use, useEffect, useState } from 'react';
+import { set } from 'zod';
 
 interface HeaderProps {
-    onFilterChange: (startDate: string, endDate: string, region: string, district: string) => void;
+    onFilterChange: (region: string, district: string, startDate: string, endDate: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ onFilterChange }) => {
@@ -11,25 +12,40 @@ export const Header: React.FC<HeaderProps> = ({ onFilterChange }) => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [region, setRegion] = useState('');
+    const [regionValues, setRegionValues] = useState([]);
     const [district, setDistrict] = useState('');
+    const [districtValues, setDistrictValues] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const regionData = await fetchRegion();
+            setRegionValues(regionData);
+            if (regionData.length > 0) {
+                const districtDate = await fetchDistrict(region);
+                setDistrictValues(districtDate);
+            }
+
+        };
+        fetchData();
+    }, [startDate, endDate, region, district]);
 
     const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setStartDate(e.target.value);
-        onFilterChange(e.target.value, endDate, region, district);
+        onFilterChange(region, district, e.target.value, endDate);
     };
 
     const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setEndDate(e.target.value);
-        onFilterChange(startDate, e.target.value, region, district);
+        onFilterChange(region, district, startDate, e.target.value);
     };
 
     const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setRegion(e.target.value);
-        onFilterChange(startDate, endDate, e.target.value, district);
+        onFilterChange(e.target.value, district, startDate, endDate);
     };
     const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setDistrict(e.target.value);
-        onFilterChange(startDate, endDate, region, e.target.value);
+        onFilterChange(region, e.target.value, startDate, endDate);
     };
     return (
         <div className="header p-4 flex flex-row">
@@ -66,8 +82,9 @@ export const Header: React.FC<HeaderProps> = ({ onFilterChange }) => {
                     className="border rounded px-2 py-1 "
                 >
                     <option value="">Select Region</option>
-                    <option value="pwani">pwani</option>
-                    <option value="Region2">Dar-es-salaam</option>
+                    {regionValues.map((region) => (
+                        <option key={region.name} value={region.name}>{region.name}</option>
+                    ))}
                 </select>
             </div>
             <div className="flex flex-col">
@@ -80,8 +97,9 @@ export const Header: React.FC<HeaderProps> = ({ onFilterChange }) => {
                     className="border rounded px-2 py-1"
                 >
                     <option value="">Select District</option>
-                    <option value="kibaha">kibaha</option>
-                    <option value="District2">District 2</option>
+                    {districtValues.map((district) => (
+                        <option key={district.name} value={district.name}>{district.name}</option>
+                    ))}
                 </select>
             </div>
         </div>

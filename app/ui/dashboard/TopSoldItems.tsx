@@ -27,7 +27,7 @@ export default async function TopSoldItems({ region, district, startDate, endDat
             }
         };
         fetchData();
-    }, [startDate, endDate, region, district]);
+    }, [region, district, startDate, endDate]);
 
     return (
         <div className="flex w-full flex-col md:col-span-4">

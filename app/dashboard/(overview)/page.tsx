@@ -2,18 +2,19 @@
 import CardWrapper from '@/app/ui/dashboard/cards';
 import { Header } from '@/app/ui/dashboard/header';
 import TopSoldItems from '@/app/ui/dashboard/TopSoldItems';
-import ExpensesChart from '@/app/ui/dashboard/ExpensesTrend';
 import { Suspense, useEffect, useState } from 'react';
 import {
     CardsSkeleton, LatestInvoicesSkeleton, RevenueChartSkeleton,
 } from '@/app/ui/skeletons';
-import expenses from '@/app/ui/dashboard/data.json'
 
 import LeastSoldItems from '@/app/ui/dashboard/LeastSoldItems';
-import Test from '@/app/ui/dashboard/test';
-import { set } from 'zod';
 import { Filter } from '@/app/ui/dashboard/headerFilter';
 import { getUser } from '@/app/lib/data';
+import ExpensesLine from '@/app/ui/dashboard/ExpensesLine';
+import ExpensesBar from '@/app/ui/dashboard/ExpensesBar';
+import ExpensesDoughnut from '@/app/ui/dashboard/ExpenseDoug';
+import SalesLine from '@/app/ui/dashboard/SalesLine';
+import SalesBar from '@/app/ui/dashboard/SalesBar';
 
 export default function Page() {
 
@@ -26,10 +27,11 @@ export default function Page() {
     const [user, setUser] = useState();
 
     const handleFilterChange = (region, district, startDate, endDate) => {
-        setStartDate(startDate);
-        setEndDate(endDate);
         setRegion(region);
         setDistrict(district);
+        setStartDate(startDate);
+        setEndDate(endDate);
+
     };
 
     const handleFilter = (startDate, endDate) => {
@@ -80,10 +82,23 @@ export default function Page() {
                     </Suspense>
 
                     <Suspense fallback={<RevenueChartSkeleton />}>
-                        <ExpensesChart region={region} district={district} startDate={startDate} endDate={endDate} />
+                        <SalesLine region={region} district={district} startDate={startDate} endDate={endDate} />
                     </Suspense>
+
+                    <Suspense fallback={<RevenueChartSkeleton />}>
+                        <SalesBar region={region} district={district} startDate={startDate} endDate={endDate} />
+                    </Suspense>
+
+                    <Suspense fallback={<RevenueChartSkeleton />}>
+                        <ExpensesLine region={region} district={district} startDate={startDate} endDate={endDate} />
+                    </Suspense>
+
+                    <Suspense fallback={<RevenueChartSkeleton />}>
+                        <ExpensesBar region={region} district={district} startDate={startDate} endDate={endDate} />
+                    </Suspense>
+
                     {/* <Suspense fallback={<RevenueChartSkeleton />}>
-                        <Test />
+                        <ExpensesDoughnut region={region} district={district} startDate={startDate} endDate={endDate} />
                     </Suspense> */}
                 </div>
             </main>

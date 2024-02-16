@@ -4,17 +4,19 @@ import { UpdateStock, DeleteStock, CreateStock } from '@/app/ui/Stock-Management
 import InvoiceStatus from '@/app/ui/Stock-Management/status';
 import { formatDateToLocal, formatCurrency } from '@/app/lib/utils';
 // import { fetchFilteredInvoices } from '@/pages/api/data';
-import { fetchMasterList, fetchProductStock, getUser } from '@/app/lib/data';
+import { fetchExpensesReport, fetchExpensesReportSupervisor, fetchMasterList, fetchProductStock, getUser } from '@/app/lib/data';
 import { use, useEffect, useState } from 'react';
+import { lusitana } from '../fonts';
 export default async function ProductStockTable({
-  query,
-  currentPage,
+  region, district, startDate, endDate
 }: {
-  query: string;
-  currentPage: number;
+  region: string;
+  district: string;
+  startDate: string;
+  endDate: string;
 }) {
 
-  const [productStock, setProductStock] = useState([]);
+  const [expenses, setExpenses] = useState([]);
 
   const [user, setUser] = useState();
 
@@ -26,12 +28,14 @@ export default async function ProductStockTable({
           setUser(user);
         }
         if (user?.roles === 'Supervisor') {
-          const productStock = await fetchMasterList(query, currentPage);
-          setProductStock(productStock);
+          if (startDate && endDate && region && district) {
+            const expenses = await fetchExpensesReportSupervisor(region, district, startDate, endDate);
+            setExpenses(expenses);
+          }
         }
         else if (user?.roles === 'Owner') {
-          const productStock = await fetchProductStock(query, currentPage);
-          setProductStock(productStock);
+          const expenses = await fetchExpensesReport(startDate, endDate);
+          setExpenses(expenses);
         }
 
       } catch (error) {
@@ -39,81 +43,47 @@ export default async function ProductStockTable({
       }
     };
     fetchData();
-  }, [query, currentPage, user]);
+  }, [region, district, startDate, endDate, user]);
 
   return (
     <>
       {user?.roles === 'Owner' ? (
         <div className="mt-6 flow-root">
+          <h2 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>
+            Expenses Report
+          </h2>
           <div className="inline-block min-w-full align-middle">
             <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
               <table className="min-w-full text-gray-900">
                 <thead className="rounded-lg text-left text-sm font-normal">
                   <tr>
                     <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
-                      Product Name
+                      Date
                     </th>
                     <th scope="col" className="px-3 py-5 font-medium">
-                      Supplier
+                      Expense Name
                     </th>
                     <th scope="col" className="px-3 py-5 font-medium">
-                      Quantity
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
-                      Reorder Quantity
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
-                      Selling Price
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
-                      Buying Price
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
-                      Expiry Date
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
-                      Status
+                      Amount
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {productStock.map((productStock) => (
-                    <tr key={productStock.id} className="border-b">
+                  {expenses.map((expense) => (
+                    <tr key={expense.id} className="border-b">
                       <td className="whitespace-nowrap py-3 px-4">
-                        {productStock.ProductName}
+                        {formatDateToLocal(expense.Date)}
                       </td>
                       <td className="whitespace-nowrap px-3 py-3">
-                        {productStock.supplier}
+                        {expense.Expense || expense.Description}
                       </td>
                       <td className="whitespace-nowrap px-3 py-3">
-                        {productStock.quantity}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-3">
-                        {productStock.reorderQuantity}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-3">
-                        {productStock.sellingPricePerStorageUnit}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-3">
-                        {productStock.pricePerStorageUnit}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-3">
-                        {formatDateToLocal(productStock.expiryDate)}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-3">
-                        <button
-                          className={`rounded-md px-2 py-1 ${productStock.stockStatus === 'In Stock'
-                              ? 'bg-green-500 text-white'
-                              : 'bg-red-500 text-white'
-                            }`}
-                        >
-                          {productStock.stockStatus}
-                        </button>
+                        {expense.Amount}
                       </td>
                       <td className="whitespace-nowrap py-3 pl-6 pr-3">
                         <div className="flex justify-end gap-3">
-                          <UpdateStock id={productStock.id} />
-                          <DeleteStock id={productStock.id} />
+                          <UpdateStock id={expense.id} />
+                          <DeleteStock id={expense.id} />
                         </div>
                       </td>
                     </tr>
@@ -125,44 +95,53 @@ export default async function ProductStockTable({
         </div>
       ) : (
         <div className="mt-6 flow-root">
+          <h2 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>
+            Expenses Report
+          </h2>
           <div className="inline-block min-w-full align-middle">
             <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
               <table className="min-w-full text-gray-900">
                 <thead className="rounded-lg text-left text-sm font-normal">
                   <tr>
                     <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
-                      Generic Name
+                      Date
                     </th>
                     <th scope="col" className="px-3 py-5 font-medium">
-                      Brand Name
+                      Expense Name
                     </th>
                     <th scope="col" className="px-3 py-5 font-medium">
-                      Dosage Type
+                      Description
                     </th>
                     <th scope="col" className="px-3 py-5 font-medium">
-                      Medicine Strength
+                      Amount
+                    </th>
+                    <th scope="col" className="px-3 py-5 font-medium">
+                      Addo Name
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {productStock.map((productStock) => (
-                    <tr key={productStock.id} className="border-b">
+                  {expenses.map((expense) => (
+                    <tr key={expense.id} className="border-b">
                       <td className="whitespace-nowrap py-3 px-4">
-                        {productStock.genericName}
+                        {formatDateToLocal(expense.Date)}
                       </td>
                       <td className="whitespace-nowrap px-3 py-3">
-                        {productStock.brandName}
+                        {expense.Expense}
                       </td>
                       <td className="whitespace-nowrap px-3 py-3">
-                        {productStock.dosageType}
+                        {expense.Description}
                       </td>
                       <td className="whitespace-nowrap px-3 py-3">
-                        {productStock.medicineStrength}
+                        {expense.Amount}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-3">
+                        {expense.Addo}
                       </td>
                       <td className="whitespace-nowrap py-3 pl-6 pr-3">
                         <div className="flex justify-end gap-3">
-                          <UpdateStock id={productStock.id} />
-                          <DeleteStock id={productStock.id} />
+                          <UpdateStock id={expense.id} />
+                          <DeleteStock id={expense.id} />
                         </div>
                       </td>
                     </tr>

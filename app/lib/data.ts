@@ -1,4 +1,3 @@
-import { options } from './../ui/dashboard/test';
 'use server'
 import { PrismaClient } from "@prisma/client";
 
@@ -9,15 +8,15 @@ import { auth } from '@/auth';
 
 const prisma = new PrismaClient();
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 8;
 
 // Functions to fetch data for user role "Supervisor"
 
 export async function fetchCardDataSupervisor(
-    startDate: string,
-    endDate: string,
     region: string,
     district: string,
+    startDate: string,
+    endDate: string,
 ) {
     noStore();
     try {
@@ -49,9 +48,10 @@ export async function fetchCardDataSupervisor(
             },
             select: {
                 id: true,
-
+                name: true,
             }
         });
+
 
         // Calculate total sales associated with the addo
         const totalSale = await prisma.sale.aggregate({
@@ -106,38 +106,14 @@ export async function fetchCardDataSupervisor(
         // Calculate total revenue
         const totalRevenue = totalSales - (totalExpenses?._sum?.amount || 0);
 
-        // Count sales associated with the addo
-        const saleCount = await prisma.sale.count({
-            where: {
-                sellingDate: {
-                    gte: start,
-                    lte: end,
-                },
-                addo: {
-                    in: addoID.map((addo) => addo.id)
-                },
-            },
-        });
-
-        // Count expenses associated with the addo
-        const expenseCount = await prisma.expense.count({
-            where: {
-                date: {
-                    gte: start,
-                    lte: end,
-                },
-                addo: {
-                    in: addoID.map((addo) => addo.id)
-                },
-            },
-        });
+        // number Addos
+        const addoCount = addoID.length;
 
         return {
             totalSales: totalSales,
             totalExpenses: totalExpenses?._sum?.amount || 0,
             totalRevenue,
-            saleCount,
-            expenseCount,
+            addoCount
         };
     } catch (error) {
         console.error('Error fetching card data:', error);
@@ -146,7 +122,7 @@ export async function fetchCardDataSupervisor(
         await prisma.$disconnect();
     }
 }
-export async function fetchExpensesSupervisor(startDate: string, endDate: string, region: string, district: string) {
+export async function fetchExpensesSupervisor(region: string, district: string, startDate: string, endDate: string) {
     noStore();
     try {
         const start = new Date(startDate);
@@ -181,7 +157,8 @@ export async function fetchExpensesSupervisor(startDate: string, endDate: string
             }
         })
 
-        const expenses = await prisma.expense.findMany({
+        const expenses = await prisma.expense.groupBy({
+            by: ['date'],
             where: {
                 date: {
                     gte: start,
@@ -191,22 +168,25 @@ export async function fetchExpensesSupervisor(startDate: string, endDate: string
                     in: addoID.map((addo) => addo.id)
                 },
             },
-            include: {
-                Option: true,
+            _sum: {
+                amount: true,
+            },
+            orderBy: {
+                date: 'asc',
             },
         });
 
         const formattedExpenses = expenses.map((expense) => {
             return {
-                id: expense.id,
-                option: expense.Option?.en,
-                description: expense.details,
-                amount: expense.amount,
+                // id: expense.id,
+                // option: expense.Option?.en,
+                // description: expense.details,
+                amount: expense._sum?.amount || 0,
                 date: expense.date,
             };
         });
 
-        console.log(formattedExpenses)
+        // console.log(formattedExpenses)
         return formattedExpenses;
     } catch (error) {
         console.error('Error fetching expenses:', error);
@@ -216,6 +196,76 @@ export async function fetchExpensesSupervisor(startDate: string, endDate: string
     }
 
 
+}
+
+export async function fetchSalesSupervisor(region: string, district: string, startDate: string, endDate: string) {
+    noStore();
+    try {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        const regionID = await prisma.region.findMany({
+            where: {
+                name: region
+            },
+            select: {
+                id: true,
+            }
+        })
+
+        const districtID = await prisma.district.findMany({
+            where: {
+                name: district
+            },
+            select: {
+                id: true,
+            }
+        })
+
+        const addoID = await prisma.addo.findMany({
+            where: {
+                region: regionID[0].id,
+                district: districtID[0].id,
+            },
+            select: {
+                id: true,
+
+            }
+        })
+
+        const salesData = await prisma.sale.groupBy({
+            by: ['sellingDate'],
+            where: {
+                sellingDate: {
+                    gte: start,
+                    lte: end,
+                },
+                addo: {
+                    in: addoID.map((addo) => addo.id)
+                },
+            },
+            _sum: {
+                total: true,
+                discount: true,
+            },
+            orderBy: {
+                sellingDate: 'asc',
+            },
+        });
+
+        const formattedSales = salesData.map(({ _sum: { total, discount }, sellingDate }) => ({
+            total: total - discount,
+            sellingDate,
+        }));
+
+        // console.log(formattedSales)
+        return formattedSales;
+    } catch (error) {
+        console.error('Error fetching expenses:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
 }
 export async function fetchMasterList(query: string, currentPage: number,) {
     noStore();
@@ -310,10 +360,10 @@ export async function fetchMasterListPages(query: string) {
 }
 
 export async function fetchTopProductSupervisor(
-    startDate: string,
-    endDate: string,
     region: string,
     district: string,
+    startDate: string,
+    endDate: string,
 ) {
     try {
         const start = new Date(startDate);
@@ -417,10 +467,10 @@ export async function fetchTopProductSupervisor(
 }
 
 export async function fetchLeastSoldProductsSupervisor(
-    startDate: string,
-    endDate: string,
     region: string,
     district: string,
+    startDate: string,
+    endDate: string,
 ) {
     try {
         const start = new Date(startDate);
@@ -435,8 +485,6 @@ export async function fetchLeastSoldProductsSupervisor(
             }
         });
 
-        console.log(region)
-        console.log(regionID)
         const districtID = await prisma.district.findMany({
             where: {
                 name: district
@@ -527,6 +575,85 @@ export async function fetchLeastSoldProductsSupervisor(
         await prisma.$disconnect();
     }
 }
+export async function fetchExpensesReportSupervisor(region: string, district: string, startDate: string, endDate: string) {
+    try {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const regionID = await prisma.region.findMany({
+            where: {
+                name: region
+            },
+            select: {
+                id: true,
+            }
+        });
+
+        const districtID = await prisma.district.findMany({
+            where: {
+                name: district
+            },
+            select: {
+                id: true,
+            }
+        });
+
+        const addoIDs = await prisma.addo.findMany({
+            where: {
+                region: regionID[0].id,
+                district: districtID[0].id,
+            },
+            select: {
+                id: true,
+            }
+        });
+
+        const expensesData = await prisma.expense.findMany({
+            where: {
+                addo: {
+                    in: addoIDs.map((addo) => addo.id),
+                },
+                createdAt: {
+                    gte: start,
+                    lte: end,
+                },
+            },
+            include: {
+                Addo: {
+                    select: {
+                        name: true,
+                    },
+                },
+                Option: {
+                    select: {
+                        en: true,
+                    },
+                },
+            },
+        });
+
+        // console.log(expensesData)
+
+        const expensesReport = expensesData.map((expense) => ({
+            'id': expense.id,
+            'Addo': expense.Addo?.name,
+            'Expense': expense.Option?.en,
+            'Description': expense.details,
+            'Amount': expense.amount,
+            'Date': expense.date,
+        }));
+
+        // console.log(expensesReport)
+
+        return expensesReport;
+
+    } catch (error) {
+        console.error('Error fetching expenses report:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
+
+}
 
 // functions to fetch data for user role "Owner"
 
@@ -588,21 +715,11 @@ export async function fetchCardDataAddo(
         // Calculate total revenue
         const totalRevenue = totalSales - (totalExpenses?._sum?.amount || 0);
 
-        // Count sales associated with the addo
+        // calculate number of users by the number sales
+
         const saleCount = await prisma.sale.count({
             where: {
                 sellingDate: {
-                    gte: start,
-                    lte: end,
-                },
-                addo: addo?.addo,
-            },
-        });
-
-        // Count expenses associated with the addo
-        const expenseCount = await prisma.expense.count({
-            where: {
-                date: {
                     gte: start,
                     lte: end,
                 },
@@ -615,7 +732,6 @@ export async function fetchCardDataAddo(
             totalExpenses: totalExpenses?._sum?.amount || 0,
             totalRevenue,
             saleCount,
-            expenseCount,
         };
     } catch (error) {
         console.error('Error fetching card data:', error);
@@ -632,7 +748,8 @@ export async function fetchExpenses(startDate: string, endDate: string) {
 
         const addo = await fetchUserAddo();
 
-        const expenses = await prisma.expense.findMany({
+        const expenses = await prisma.expense.groupBy({
+            by: ['date'],
             where: {
                 date: {
                     gte: start,
@@ -640,30 +757,172 @@ export async function fetchExpenses(startDate: string, endDate: string) {
                 },
                 addo: addo?.addo,
             },
-            include: {
-                Option: true,
+            _sum: {
+                amount: true,
+            },
+            orderBy: {
+                date: 'asc',
             },
         });
 
         const formattedExpenses = expenses.map((expense) => {
             return {
-                id: expense.id,
-                option: expense.Option?.en,
-                description: expense.details,
-                amount: expense.amount,
+                // id: expense.id,
+                // option: expense.Option?.en,
+                // description: expense.details,
+                amount: expense._sum?.amount || 0,
                 date: expense.date,
             };
         });
-        const slice = formattedExpenses.slice(0, 5);
-        return slice;
+        return formattedExpenses;
     } catch (error) {
         console.error('Error fetching expenses:', error);
         throw error;
     } finally {
         await prisma.$disconnect();
     }
+}
+export async function fetchExpensesReport(startDate: string, endDate: string) {
+    try {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const addo = await fetchUserAddo();
+        const expensesData = await prisma.expense.findMany({
+            where: {
+                date: {
+                    gte: start,
+                    lte: end,
+                },
+                addo: addo?.addo,
+            },
+            orderBy: {
+                date: 'asc',
+            },
+            include: {
+                Addo: {
+                    select: {
+                        name: true,
+                    },
+                },
+                Option: {
+                    select: {
+                        en: true,
+                    },
+                },
+            },
+        });
 
+        const expensesReport = expensesData.map((expense) => ({
+            'id': expense.id,
+            'Addo': expense.Addo?.name,
+            'Expense': expense.Option?.en,
+            'Description': expense.details,
+            'Amount': expense.amount,
+            'Date': expense.date,
+        }));
 
+        return expensesReport;
+    } catch (error) {
+        console.error('Error fetching expenses report:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+export async function fetchSales(startDate: string, endDate: string) {
+    noStore();
+    try {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const addo = await fetchUserAddo();
+        const sales = await prisma.sale.groupBy({
+            by: ['sellingDate'],
+            where: {
+                sellingDate: {
+                    gte: start,
+                    lte: end,
+                },
+                addo: addo?.addo,
+            },
+            _sum: {
+                total: true,
+                discount: true,
+            },
+            orderBy: {
+                sellingDate: 'asc',
+            },
+        });
+        const formattedSales = sales.map(({ _sum: { total, discount }, sellingDate }) => ({
+            total: total - discount,
+            sellingDate,
+        }));
+        return formattedSales;
+    }
+    catch (error) {
+        console.error('Error fetching sales:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+export async function fetchSalesReport(startDate: string, endDate: string) {
+    noStore();
+    try {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const addo = await fetchUserAddo();
+
+        const salesReport = await prisma.productSale.findMany({
+            where: {
+                createdAt: {
+                    gte: start,
+                    lte: end,
+                },
+                addo: addo?.addo,
+            },
+            orderBy: {
+                createdAt: 'asc',
+            },
+            include: {
+                ADDOProduct: {
+                    select: {
+                        brandName: true,
+                        genericName: true,
+                        medicineStrength: true,
+                    }
+                },
+                SpecialProduct: {
+                    select: {
+                        brandName: true,
+                        genericName: true,
+                        medicineStrength: true,
+                    }
+                },
+            },
+        });
+
+        const formattedSalesReport = salesReport.map((sale) => {
+            return {
+                id: sale.id,
+                product: sale.ADDOProduct
+                    ? `${sale.ADDOProduct.brandName} ${sale.ADDOProduct.genericName} ${sale.ADDOProduct.medicineStrength}`.trim()
+                    : sale.SpecialProduct
+                        ? `${sale.SpecialProduct.brandName} ${sale.SpecialProduct.genericName} ${sale.SpecialProduct.medicineStrength}`
+                        : ''.trim(),
+                price: sale.price,
+                quantity: sale.quantity,
+                total: sale.subtotal,
+                createdAt: sale.createdAt,
+            };
+        });
+
+        return formattedSalesReport;
+    } catch (error) {
+        console.error('Error fetching sales report:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
 }
 export async function fetchProductStock(query: string, currentPage: number,) {
     noStore();
@@ -741,6 +1000,7 @@ export async function fetchProductStock(query: string, currentPage: number,) {
         });
 
         const ProductStock = stock.map((product) => {
+            const stockStatus = product.quantity > product.reorderQuantity ? 'In Stock' : 'Out Stock';
             return {
                 id: product.id,
                 quantity: product.quantity,
@@ -756,6 +1016,7 @@ export async function fetchProductStock(query: string, currentPage: number,) {
                 supplier: product.supplier,
                 sellingUnit: product.sellingUnit,
                 storageUnit: product.storageUnit,
+                stockStatus: stockStatus,
             };
         });
         return ProductStock;
@@ -1060,6 +1321,42 @@ export async function getUser() {
         return user;
     } catch (error) {
         console.error('Error fetching user:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+
+export async function fetchRegion() {
+    try {
+        const regionData = await prisma.region.findMany();
+        return regionData;
+    } catch (error) {
+        console.error('Error fetching region:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+
+export async function fetchDistrict(region: string) {
+    try {
+        const regionID = await prisma.region.findUnique({
+            where: {
+                name: region,
+            }
+        });
+
+        const districtData = await prisma.district.findMany(
+            {
+                where: {
+                    region: regionID?.id,
+                }
+            }
+        );
+        return districtData;
+    } catch (error) {
+        console.error('Error fetching district:', error);
         throw error;
     } finally {
         await prisma.$disconnect();
