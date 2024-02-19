@@ -75,7 +75,7 @@ export default function SalesLine(
             y: {
                 title: {
                     display: true,
-                    text: 'Amount'
+                    text: 'Total Sales'
                 },
                 beginAtZero: true
             }

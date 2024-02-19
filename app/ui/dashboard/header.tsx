@@ -1,10 +1,11 @@
-import { fetchDistrict, fetchRegion } from '@/app/lib/data';
+import { fetchDistrict, fetchRegion, getUser } from '@/app/lib/data';
 import { use, useEffect, useState } from 'react';
 import { set } from 'zod';
 
 interface HeaderProps {
     onFilterChange: (region: string, district: string, startDate: string, endDate: string) => void;
 }
+
 
 export const Header: React.FC<HeaderProps> = ({ onFilterChange }) => {
 
@@ -15,11 +16,14 @@ export const Header: React.FC<HeaderProps> = ({ onFilterChange }) => {
     const [regionValues, setRegionValues] = useState([]);
     const [district, setDistrict] = useState('');
     const [districtValues, setDistrictValues] = useState([]);
+    const [user, setUser] = useState();
 
     useEffect(() => {
         const fetchData = async () => {
             const regionData = await fetchRegion();
             setRegionValues(regionData);
+            const user = await getUser();
+            setUser(user);
             if (regionData.length > 0) {
                 const districtDate = await fetchDistrict(region);
                 setDistrictValues(districtDate);
@@ -27,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({ onFilterChange }) => {
 
         };
         fetchData();
-    }, [startDate, endDate, region, district]);
+    }, [startDate, endDate, region, district, user]);
 
     const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setStartDate(e.target.value);
@@ -79,9 +83,9 @@ export const Header: React.FC<HeaderProps> = ({ onFilterChange }) => {
                     name="region"
                     value={region}
                     onChange={handleRegionChange}
-                    className="border rounded px-2 py-1 "
+                    className="border rounded py-1 "
                 >
-                    <option value="">Select Region</option>
+                    <option value="" disabled>Select Region</option>
                     {regionValues.map((region) => (
                         <option key={region.name} value={region.name}>{region.name}</option>
                     ))}
@@ -94,9 +98,9 @@ export const Header: React.FC<HeaderProps> = ({ onFilterChange }) => {
                     name="district"
                     value={district}
                     onChange={handleDistrictChange}
-                    className="border rounded px-2 py-1"
+                    className="border rounded py-1"
                 >
-                    <option value="">Select District</option>
+                    <option value="" disabled>Select District</option>
                     {districtValues.map((district) => (
                         <option key={district.name} value={district.name}>{district.name}</option>
                     ))}

@@ -8,7 +8,7 @@ import { auth } from '@/auth';
 
 const prisma = new PrismaClient();
 
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 6;
 
 // Functions to fetch data for user role "Supervisor"
 
@@ -1019,6 +1019,7 @@ export async function fetchProductStock(query: string, currentPage: number,) {
                 stockStatus: stockStatus,
             };
         });
+
         return ProductStock;
     } catch (error) {
         console.error('Error fetching product stock:', error);
@@ -1247,6 +1248,92 @@ export async function fetchLeastSoldProductsAddo(
         // store.setProp("LeastSoldReport", leastSoldReport);
     } catch (error) {
         console.error('Error fetching least sold products:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+
+export async function fetchSupplier() {
+    try {
+        const addo = await fetchUserAddo();
+        const supplierData = await prisma.supplier.findMany(
+            // {
+            //     where: {
+            //         addo: addo?.addo,
+            //     }
+            // }
+        );
+        return supplierData;
+    } catch (error) {
+        console.error('Error fetching supplier:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+
+export async function fetchProductType() {
+    try {
+        const productTypeData = await prisma.option.findMany({
+            where: {
+                OptionType: {
+                    name: 'ProductType',
+                },
+            },
+            select: {
+                key: true,
+            },
+        });
+        // console.log(productTypeData);
+        return productTypeData;
+    } catch (error) {
+        console.error('Error fetching product type:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+
+export async function fetchMedicalType() {
+    try {
+        const medicalTypeData = await prisma.option.findMany({
+            where: {
+                OptionType: {
+                    name: 'MedicalType',
+                },
+            },
+            select: {
+                key: true,
+            },
+        });
+
+        return medicalTypeData;
+
+    } catch (error) {
+        console.error('Error fetching medical type:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+
+export async function fetchSellingUnit() {
+    try {
+        const sellingUnitData = await prisma.option.findMany({
+            where: {
+                OptionType: {
+                    name: 'MedicalUnit',
+                },
+            },
+            select: {
+                key: true,
+            },
+        });
+        console.log(sellingUnitData);
+        return sellingUnitData;
+    } catch (error) {
+        console.error('Error fetching selling unit:', error);
         throw error;
     } finally {
         await prisma.$disconnect();

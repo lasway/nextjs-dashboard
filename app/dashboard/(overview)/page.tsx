@@ -15,6 +15,8 @@ import ExpensesBar from '@/app/ui/dashboard/ExpensesBar';
 import ExpensesDoughnut from '@/app/ui/dashboard/ExpenseDoug';
 import SalesLine from '@/app/ui/dashboard/SalesLine';
 import SalesBar from '@/app/ui/dashboard/SalesBar';
+import { Metadata } from 'next';
+
 
 export default function Page() {
 

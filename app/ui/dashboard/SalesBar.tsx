@@ -74,7 +74,7 @@ export default function SalesBar({ region, district, startDate, endDate }: { reg
             y: {
                 title: {
                     display: true,
-                    text: 'Amount'
+                    text: 'Total Sales'
                 },
                 beginAtZero: true
             }

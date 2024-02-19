@@ -81,7 +81,7 @@ export default function ExpensesBar({ region, district, startDate, endDate }: { 
             y: {
                 title: {
                     display: true,
-                    text: 'Amount'
+                    text: 'Total Amounts'
                 },
                 beginAtZero: true
             }

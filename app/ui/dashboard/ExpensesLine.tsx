@@ -77,7 +77,7 @@ export default function ExpensesLine(
             y: {
                 title: {
                     display: true,
-                    text: 'Amount'
+                    text: 'Total Amounts'
                 },
                 beginAtZero: true
             }

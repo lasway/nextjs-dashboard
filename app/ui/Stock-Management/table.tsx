@@ -1,11 +1,8 @@
 
-import Image from 'next/image';
-import { UpdateStock, DeleteStock, CreateStock } from '@/app/ui/Stock-Management/buttons';
-import InvoiceStatus from '@/app/ui/Stock-Management/status';
-import { formatDateToLocal, formatCurrency } from '@/app/lib/utils';
-// import { fetchFilteredInvoices } from '@/pages/api/data';
+import { UpdateStock, DeleteStock } from '@/app/ui/Stock-Management/buttons';
+import { formatDateToLocal } from '@/app/lib/utils';
 import { fetchMasterList, fetchProductStock, getUser } from '@/app/lib/data';
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 export default async function ProductStockTable({
   query,
   currentPage,
@@ -103,8 +100,8 @@ export default async function ProductStockTable({
                       <td className="whitespace-nowrap px-3 py-3">
                         <button
                           className={`rounded-md px-2 py-1 ${productStock.stockStatus === 'In Stock'
-                              ? 'bg-green-500 text-white'
-                              : 'bg-red-500 text-white'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-red-500 text-white'
                             }`}
                         >
                           {productStock.stockStatus}
