@@ -1,3 +1,4 @@
+
 import { fetchDistrict, fetchRegion, getUser } from '@/app/lib/data';
 import { use, useEffect, useState } from 'react';
 import { set } from 'zod';
@@ -16,22 +17,16 @@ export const Header: React.FC<HeaderProps> = ({ onFilterChange }) => {
     const [regionValues, setRegionValues] = useState([]);
     const [district, setDistrict] = useState('');
     const [districtValues, setDistrictValues] = useState([]);
-    const [user, setUser] = useState();
 
     useEffect(() => {
         const fetchData = async () => {
             const regionData = await fetchRegion();
             setRegionValues(regionData);
-            const user = await getUser();
-            setUser(user);
-            if (regionData.length > 0) {
-                const districtDate = await fetchDistrict(region);
-                setDistrictValues(districtDate);
-            }
-
+            const districtDate = await fetchDistrict(region);
+            setDistrictValues(districtDate)
         };
         fetchData();
-    }, [startDate, endDate, region, district, user]);
+    }, [startDate, endDate, region, district]);
 
     const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setStartDate(e.target.value);

@@ -996,6 +996,11 @@ export async function fetchProductStock(query: string, currentPage: number,) {
                         medicineStrength: true,
                     },
                 },
+                Supplier: {
+                    select: {
+                        name: true,
+                    },
+                },
             },
         });
 
@@ -1013,7 +1018,7 @@ export async function fetchProductStock(query: string, currentPage: number,) {
                 sellingPricePerStorageUnit: product.sellingPricePerStorageUnit,
                 pricePerStorageUnit: product.pricePerStorageUnit,
                 expiryDate: product.expiryDate,
-                supplier: product.supplier,
+                supplier: product.Supplier?.name,
                 sellingUnit: product.sellingUnit,
                 storageUnit: product.storageUnit,
                 stockStatus: stockStatus,
@@ -1092,6 +1097,54 @@ export async function fetchProductStockPages(query: string) {
         await prisma.$disconnect();
     }
 
+}
+export async function fetchProductStockAddoById(id: string) {
+    noStore();
+    try {
+        const data = await prisma.productStock.findUnique({
+            where: {
+                id: id,
+            },
+            include: {
+                ADDOProduct: {
+                    select: {
+                        brandName: true,
+                        genericName: true,
+                        medicineStrength: true,
+                    },
+                },
+                SpecialProduct: {
+                    select: {
+                        brandName: true,
+                        genericName: true,
+                        medicineStrength: true,
+                    },
+                },
+            },
+        });
+        // Combine values from ADDOProduct and SpecialProduct
+        const combinedData = {
+            id: data?.id,
+            brandName: data?.ADDOProduct ? data?.ADDOProduct.brandName : data?.SpecialProduct ? data?.SpecialProduct.brandName : '',
+            genericName: data?.ADDOProduct ? data?.ADDOProduct.genericName : data?.SpecialProduct ? data?.SpecialProduct.genericName : '',
+            medicineStrength: data?.ADDOProduct ? data?.ADDOProduct.medicineStrength : data?.SpecialProduct ? data?.SpecialProduct.medicineStrength : '',
+            quantity: data?.quantity,
+            reorderQuantity: data?.reorderQuantity,
+            sellingPricePerStorageUnit: data?.sellingPricePerStorageUnit,
+            pricePerStorageUnit: data?.pricePerStorageUnit,
+            expiryDate: data?.expiryDate,
+            supplier: data?.supplier,
+            sellingUnit: data?.sellingUnit,
+            storageUnit: data?.storageUnit
+        };
+
+        return combinedData;
+    } catch (error) {
+        console.error('Error fetching product stock by id:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
 }
 export async function fetchTopProductAddo(
     startDate: string,
@@ -1282,6 +1335,7 @@ export async function fetchProductType() {
                 },
             },
             select: {
+                id: true,
                 key: true,
             },
         });
@@ -1304,6 +1358,7 @@ export async function fetchMedicalType() {
                 },
             },
             select: {
+                id: true,
                 key: true,
             },
         });
@@ -1327,10 +1382,11 @@ export async function fetchSellingUnit() {
                 },
             },
             select: {
+                id: true,
                 key: true,
             },
         });
-        console.log(sellingUnitData);
+        // console.log(sellingUnitData);
         return sellingUnitData;
     } catch (error) {
         console.error('Error fetching selling unit:', error);
@@ -1395,8 +1451,6 @@ export async function fetchUserAddo() {
     }
 }
 export async function getUser() {
-    const prisma = new PrismaClient();
-
     const userEmail = await auth();
 
     try {

@@ -10,7 +10,7 @@ async function getUser(email: string) {
     const prisma = new PrismaClient();
     try {
         const user = await prisma.user.findUnique({ where: { email } });
-        console.log(user);
+        // console.log(user);
         return user;
     } finally {
         await prisma.$disconnect();

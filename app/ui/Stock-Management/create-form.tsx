@@ -1,22 +1,20 @@
 'use client'
-import { CustomerField } from '@/app/lib/definitions';
 import Link from 'next/link';
-import {
-  CheckIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
-  UserCircleIcon,
-  CalendarIcon,
-  DocumentTextIcon
-} from '@heroicons/react/24/outline';
 import { Button } from '@/app/ui/button';
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchMedicalType, fetchProductType, fetchSellingUnit, fetchSupplier, getUser } from '@/app/lib/data';
-import { set } from 'zod';
+import { useFormState } from 'react-dom';
+import { createStock } from '@/app/lib/actions';
 
 export default function Form() {
 
+  const initialState = { message: null, errors: {} };
+
+  // const [state, dispatch] = useFormState(createStock, initialState);
+  const [state, dispatch] = useFormState(createStock, initialState);
+
   const [file, setFile] = useState(null);
+
   const [user, setUser] = useState();
   const [supplier, setSupplier] = useState([]);
   const [productType, setProductType] = useState([]);
@@ -51,7 +49,7 @@ export default function Form() {
   return (
     <>
       {user?.roles === 'Owner' ? (
-        <form >
+        <form action={dispatch} >
           <div className="rounded-md bg-gray-50 p-4 md:p-6">
             <div className="mb-4">
               <label htmlFor="AddedDate" className="mb-2 block text-sm font-medium">
@@ -68,12 +66,12 @@ export default function Form() {
                 </input>
               </div>
               <div id="addedDate-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.customerId &&
-                  state.errors.customerId.map((error: string) => (
+                {state.errors?.AddedDate &&
+                  state.errors.AddedDate.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mb-4">
@@ -98,14 +96,13 @@ export default function Form() {
                   ))}
                 </select>
               </div>
-
-              <div id="customer-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.customerId &&
-                  state.errors.customerId.map((error: string) => (
+              <div id="supplier-error" aria-live="polite" aria-atomic="true">
+                {state.errors?.supplierId &&
+                  state.errors.supplierId.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mb-4">
@@ -131,13 +128,13 @@ export default function Form() {
                 </select>
               </div>
 
-              <div id="customer-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.customerId &&
-                  state.errors.customerId.map((error: string) => (
+              <div id="productType-error" aria-live="polite" aria-atomic="true">
+                {state.errors?.productType &&
+                  state.errors.productType.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mb-4">
@@ -163,13 +160,13 @@ export default function Form() {
                 </select>
               </div>
 
-              <div id="customer-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.customerId &&
-                  state.errors.customerId.map((error: string) => (
+              <div id="medicineType-error" aria-live="polite" aria-atomic="true">
+                {state.errors?.medicineType &&
+                  state.errors.medicineType.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mb-4">
@@ -194,15 +191,14 @@ export default function Form() {
                     </option>
                   ))}
                 </select>
-                {/* <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" /> */}
               </div>
               <div id="sellingUnit-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.genericName &&
-                  state.errors.genericName.map((error: string) => (
+                {state.errors?.sellingUnit &&
+                  state.errors.sellingUnit.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mb-4">
@@ -219,15 +215,15 @@ export default function Form() {
                   placeholder="Enter generic name"
                   aria-describedby="genericName-error"
                 />
-                {/* <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" /> */}
+
               </div>
               <div id="genericName-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.genericName &&
+                {state.errors?.genericName &&
                   state.errors.genericName.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mb-4">
@@ -244,15 +240,14 @@ export default function Form() {
                   placeholder="Enter brand name"
                   aria-describedby="brandName-error"
                 />
-                {/* <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" /> */}
               </div>
               <div id="brandName-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.genericName &&
-                  state.errors.genericName.map((error: string) => (
+                {state.errors?.brandName &&
+                  state.errors.brandName.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mb-4">
@@ -269,15 +264,15 @@ export default function Form() {
                   placeholder="Enter Medicine strength"
                   aria-describedby="MedicineStrength-error"
                 />
-                {/* <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" /> */}
+
               </div>
               <div id="MedicineStrength-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.genericName &&
-                  state.errors.genericName.map((error: string) => (
+                {state.errors?.MedicineStrength &&
+                  state.errors.MedicineStrength.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mb-4">
@@ -296,12 +291,12 @@ export default function Form() {
                 />
               </div>
               <div id="quantity-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.genericName &&
-                  state.errors.genericName.map((error: string) => (
+                {state.errors?.quantity &&
+                  state.errors.quantity.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mb-4">
@@ -320,12 +315,12 @@ export default function Form() {
                 />
               </div>
               <div id="reOrder-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.genericName &&
-                  state.errors.genericName.map((error: string) => (
+                {state.errors?.reOrder &&
+                  state.errors.reOrder.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mb-4">
@@ -344,12 +339,12 @@ export default function Form() {
                 />
               </div>
               <div id="buyingPrice-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.genericName &&
-                  state.errors.genericName.map((error: string) => (
+                {state.errors?.buyingPrice &&
+                  state.errors.buyingPrice.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mb-4">
@@ -368,12 +363,12 @@ export default function Form() {
                 />
               </div>
               <div id="sellingPrice-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.genericName &&
-                  state.errors.genericName.map((error: string) => (
+                {state.errors?.sellingPrice &&
+                  state.errors.sellingPrice.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mb-4">
@@ -392,26 +387,26 @@ export default function Form() {
                 />
               </div>
               <div id="expiryDate-error" aria-live="polite" aria-atomic="true">
-                {/* {state.errors?.genericName &&
-                  state.errors.genericName.map((error: string) => (
+                {state.errors?.expiryDate &&
+                  state.errors.expiryDate.map((error: string) => (
                     <p className="mt-2 text-sm text-red-500" key={error}>
                       {error}
                     </p>
-                  ))} */}
+                  ))}
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-4">
               <Link
-                href="/dashboard/invoices"
+                href="/dashboard/stock-management"
                 className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
               >
                 Cancel
               </Link>
-              <Button type="submit">Create Invoice</Button>
+              <Button type="submit">Add stock</Button>
             </div>
 
-          </div>
-        </form>
+          </div >
+        </form >
       ) : (
 
         <form>
@@ -443,7 +438,8 @@ export default function Form() {
             <Button type="submit">Import</Button>
           </div>
         </form >
-      )}
+      )
+      }
     </>
   );
 }

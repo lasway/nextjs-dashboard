@@ -1,9 +1,9 @@
-
+'use client'
 import { UpdateStock, DeleteStock } from '@/app/ui/Stock-Management/buttons';
 import { formatDateToLocal } from '@/app/lib/utils';
 import { fetchMasterList, fetchProductStock, getUser } from '@/app/lib/data';
 import { useEffect, useState } from 'react';
-export default async function ProductStockTable({
+export default function ProductStockTable({
   query,
   currentPage,
 }: {

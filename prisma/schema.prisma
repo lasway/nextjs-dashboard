@@ -8,7 +8,7 @@ datasource db {
 }
 
 model ADDOProduct {
-  id                                           String                @id
+  id                                           String                @id @default(uuid())
   genericName                                  String                @default("")
   brandName                                    String                @default("")
   dosageType                                   String?
@@ -38,15 +38,17 @@ model ADDOProduct {
 }
 
 model Addo {
-  id                        String                @id
+  id                        String                @id @default(uuid())
   registrationNumber        String                @default("")
   name                      String                @default("")
   region                    String?
   district                  String?
+  addoRegistration          String?
   createdAt                 DateTime?             @default(now())
   updatedAt                 DateTime?
   createdBy                 String?
   updatedBy                 String?
+  AddoRegistration          AddoRegistration?     @relation(fields: [addoRegistration], references: [id])
   User_Addo_createdByToUser User?                 @relation("Addo_createdByToUser", fields: [createdBy], references: [id])
   District                  District?             @relation(fields: [district], references: [id])
   Region                    Region?               @relation(fields: [region], references: [id])
@@ -61,6 +63,7 @@ model Addo {
   Supplier                  Supplier[]
   User_User_addo            User[]                @relation("User_addo")
 
+  @@index([addoRegistration])
   @@index([createdBy])
   @@index([district])
   @@index([name])
@@ -69,7 +72,7 @@ model Addo {
 }
 
 model AddoRegistration {
-  id                                    String    @id
+  id                                    String    @id @default(uuid())
   registrationNumber                    String    @unique @default("")
   premise                               String    @default("")
   owner                                 String    @default("")
@@ -81,6 +84,7 @@ model AddoRegistration {
   updatedAt                             DateTime?
   createdBy                             String?
   updatedBy                             String?
+  Addo                                  Addo[]
   User_AddoRegistration_createdByToUser User?     @relation("AddoRegistration_createdByToUser", fields: [createdBy], references: [id])
   User_AddoRegistration_updatedByToUser User?     @relation("AddoRegistration_updatedByToUser", fields: [updatedBy], references: [id])
 
@@ -95,7 +99,7 @@ model AddoRegistration {
 }
 
 model District {
-  id                            String    @id
+  id                            String    @id @default(uuid())
   name                          String    @unique @default("")
   region                        String?
   createdAt                     DateTime? @default(now())
@@ -113,16 +117,16 @@ model District {
 }
 
 model Expense {
-  id                           String    @id
+  id                           String    @id @default(uuid())
   date                         DateTime  @db.Date
+  type                         String?
   details                      String    @default("")
   amount                       Float?    @default(0)
+  addo                         String?
   createdAt                    DateTime? @default(now())
   updatedAt                    DateTime?
   createdBy                    String?
   updatedBy                    String?
-  addo                         String?
-  type                         String?
   Addo                         Addo?     @relation(fields: [addo], references: [id])
   User_Expense_createdByToUser User?     @relation("Expense_createdByToUser", fields: [createdBy], references: [id])
   Option                       Option?   @relation(fields: [type], references: [id])
@@ -136,7 +140,7 @@ model Expense {
 }
 
 model Option {
-  id                                                          String                @id
+  id                                                          String                @id @default(uuid())
   type                                                        String?
   key                                                         String                @unique @default("")
   en                                                          String                @unique @default("")
@@ -161,6 +165,7 @@ model Option {
   Sale_Sale_patientTypeToOption                               Sale[]                @relation("Sale_patientTypeToOption")
   SpecialProduct_SpecialProduct_adminstrationTypeToOption     SpecialProduct[]      @relation("SpecialProduct_adminstrationTypeToOption")
   SpecialProduct_SpecialProduct_dosageTypeToOption            SpecialProduct[]      @relation("SpecialProduct_dosageTypeToOption")
+  SpecialProduct_SpecialProduct_productTypeToOption           SpecialProduct[]      @relation("SpecialProduct_productTypeToOption")
 
   @@index([createdBy])
   @@index([type])
@@ -168,7 +173,7 @@ model Option {
 }
 
 model OptionType {
-  id                              String    @id
+  id                              String    @id @default(uuid())
   name                            String    @unique @default("")
   createdAt                       DateTime? @default(now())
   updatedAt                       DateTime?
@@ -183,20 +188,20 @@ model OptionType {
 }
 
 model ProductAdjustment {
-  id                                     String          @id
+  id                                     String          @id @default(uuid())
   adjustmentDate                         DateTime        @db.Date
   adjustmentReason                       String?
   newQuantity                            Float?          @default(0)
   newPrice                               Float?          @default(0)
+  pricePerStorageUnit                    Float?          @default(0)
+  addoProduct                            String?
+  specialProduct                         String?
+  addo                                   String?
+  stock                                  String?
   createdAt                              DateTime?       @default(now())
   updatedAt                              DateTime?
   createdBy                              String?
   updatedBy                              String?
-  addoProduct                            String?
-  specialProduct                         String?
-  addo                                   String?
-  pricePerStorageUnit                    Float?          @default(0)
-  stock                                  String?
   ADDOProduct                            ADDOProduct?    @relation(fields: [addoProduct], references: [id])
   Addo                                   Addo?           @relation(fields: [addo], references: [id])
   Option                                 Option?         @relation(fields: [adjustmentReason], references: [id])
@@ -215,7 +220,7 @@ model ProductAdjustment {
 }
 
 model ProductSale {
-  id                               String          @id
+  id                               String          @id @default(uuid())
   quantity                         Float?          @default(0)
   price                            Float?          @default(0)
   subtotal                         Float?          @default(0)
@@ -242,7 +247,7 @@ model ProductSale {
 }
 
 model ProductStock {
-  id                                                          String                @id
+  id                                                          String                @id @default(uuid())
   supplier                                                    String?
   storageUnit                                                 String?
   sellingUnit                                                 String?
@@ -253,13 +258,13 @@ model ProductStock {
   addoProduct                                                 String?
   specialProduct                                              String?
   expiryDate                                                  DateTime?             @db.Date
+  addedDate                                                   DateTime?             @db.Date
   batchNumber                                                 String                @default("")
+  addo                                                        String?
   createdAt                                                   DateTime?             @default(now())
   updatedAt                                                   DateTime?
   createdBy                                                   String?
   updatedBy                                                   String?
-  addo                                                        String?
-  addedDate                                                   DateTime?             @db.Date
   ProductAdjustment                                           ProductAdjustment[]
   ADDOProduct                                                 ADDOProduct?          @relation(fields: [addoProduct], references: [id])
   Addo                                                        Addo?                 @relation(fields: [addo], references: [id])
@@ -284,7 +289,7 @@ model ProductStock {
 }
 
 model ProductStockHistory {
-  id                                                   String          @id
+  id                                                   String          @id @default(uuid())
   supplier                                             String?
   storageUnit                                          String?
   sellingUnit                                          String?
@@ -326,7 +331,7 @@ model ProductStockHistory {
 }
 
 model Region {
-  id                          String     @id
+  id                          String     @id @default(uuid())
   name                        String     @unique @default("")
   createdAt                   DateTime?  @default(now())
   updatedAt                   DateTime?
@@ -342,7 +347,7 @@ model Region {
 }
 
 model Sale {
-  id                                 String        @id
+  id                                 String        @id @default(uuid())
   sellingDate                        DateTime?     @db.Date
   patientType                        String?
   customerName                       String        @default("")
@@ -350,12 +355,12 @@ model Sale {
   customerAge                        String?
   customePhone                       String        @default("")
   total                              Float?        @default(0)
+  discount                           Float?        @default(0)
+  addo                               String?
   createdAt                          DateTime?     @default(now())
   updatedAt                          DateTime?
   createdBy                          String?
   updatedBy                          String?
-  discount                           Float?        @default(0)
-  addo                               String?
   Addo                               Addo?         @relation(fields: [addo], references: [id])
   User_Sale_createdByToUser          User?         @relation("Sale_createdByToUser", fields: [createdBy], references: [id])
   Option_Sale_customerAgeToOption    Option?       @relation("Sale_customerAgeToOption", fields: [customerAge], references: [id])
@@ -375,17 +380,18 @@ model Sale {
 }
 
 model SpecialProduct {
-  id                                              String                @id
+  id                                              String                @id @default(uuid())
   genericName                                     String                @default("")
   brandName                                       String                @default("")
   dosageType                                      String?
   medicineStrength                                String                @default("")
   adminstrationType                               String?
+  productType                                     String?
+  addo                                            String?
   createdAt                                       DateTime?             @default(now())
   updatedAt                                       DateTime?
   createdBy                                       String?
   updatedBy                                       String?
-  addo                                            String?
   ProductAdjustment                               ProductAdjustment[]
   ProductSale                                     ProductSale[]
   ProductStock                                    ProductStock[]
@@ -394,6 +400,7 @@ model SpecialProduct {
   Option_SpecialProduct_adminstrationTypeToOption Option?               @relation("SpecialProduct_adminstrationTypeToOption", fields: [adminstrationType], references: [id])
   User_SpecialProduct_createdByToUser             User?                 @relation("SpecialProduct_createdByToUser", fields: [createdBy], references: [id])
   Option_SpecialProduct_dosageTypeToOption        Option?               @relation("SpecialProduct_dosageTypeToOption", fields: [dosageType], references: [id])
+  Option_SpecialProduct_productTypeToOption       Option?               @relation("SpecialProduct_productTypeToOption", fields: [productType], references: [id])
   User_SpecialProduct_updatedByToUser             User?                 @relation("SpecialProduct_updatedByToUser", fields: [updatedBy], references: [id])
 
   @@index([addo])
@@ -403,20 +410,21 @@ model SpecialProduct {
   @@index([dosageType])
   @@index([genericName])
   @@index([medicineStrength])
+  @@index([productType])
   @@index([updatedBy])
 }
 
 model Supplier {
-  id                            String                @id
+  id                            String                @id @default(uuid())
   name                          String                @default("")
   address                       String                @default("")
   phone                         String                @default("")
   email                         String                @default("")
+  addo                          String?
   createdAt                     DateTime?             @default(now())
   updatedAt                     DateTime?
   createdBy                     String?
   updatedBy                     String?
-  addo                          String?
   ProductStock                  ProductStock[]
   ProductStockHistory           ProductStockHistory[]
   Addo                          Addo?                 @relation(fields: [addo], references: [id])
@@ -433,7 +441,7 @@ model Supplier {
 }
 
 model User {
-  id                                                      String                @id
+  id                                                      String                @id @default(uuid())
   roles                                                   User_roles            @default(Owner)
   email                                                   String                @unique @default("")
   password                                                String

@@ -18,7 +18,7 @@ export function CreateStock() {
 export function UpdateStock({ id }: { id: string }) {
   return (
     <Link
-      href="/dashboard/stock-management"
+      href={`/dashboard/stock-management/${id}/edit`}
       className="rounded-md border p-2 color text-blue-700"
     >
       <PencilIcon className="w-5" />

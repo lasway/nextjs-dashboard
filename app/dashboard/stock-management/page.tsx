@@ -1,13 +1,10 @@
-'use client'
-import { fetchProductStockPages, fetchUserAddo } from "@/app/lib/data";
 import { CreateStock } from "@/app/ui/Stock-Management/buttons";
 import Pagination from "@/app/ui/Stock-Management/pagination";
 import Table from "@/app/ui/Stock-Management/table";
 import { lusitana } from "@/app/ui/fonts";
 import Search from "@/app/ui/search";
 import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
-import { Metadata } from "next";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 
 
 

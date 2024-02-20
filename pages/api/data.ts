@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
 import { fetchUserAddo } from '@/app/lib/data';
 
+
 const prisma = new PrismaClient();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -13,10 +14,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const end = new Date(endDate);
 
     try {
-        const salesData = await prisma.productSale.findMany({
+        const salesData = await prisma.productStock.findMany({
             where: {
                 addo: addo,
-                createdAt: {
+                addedDate: {
                     gte: start,
                     lte: end,
                 }
@@ -31,3 +32,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await prisma.$disconnect();
     }
 }
+
