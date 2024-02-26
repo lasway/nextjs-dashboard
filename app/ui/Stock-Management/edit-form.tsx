@@ -423,29 +423,13 @@ export default function Form({ id }: { id: string }) {
                 </Link>
                 <Button type="submit">Update stock</Button>
               </div>
-
             </div >
           </form >
         ) : (
 
           <form>
             <div className="rounded-md bg-gray-50 p-4 md:p-6">
-              <div className="mb-4">
-                <label htmlFor="customer" className="mb-2 block text-sm font-medium">
-                  Import File
-                </label>
-                <div className="relative">
-                  <input
-                    type="file"
-                    className="block w-full px-4 py-2 text-gray-700 bg-white border border-gray-300
-         rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500
-         focus:border-blue-500"
-                    onChange={handleFileChange}
-                    id="stock"
-                    placeholder="stock"
-                  />
-                </div>
-              </div >
+
             </div >
             <div className="mt-6 flex justify-end gap-4">
               <Link

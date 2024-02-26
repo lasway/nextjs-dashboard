@@ -4,7 +4,8 @@ import { Button } from '@/app/ui/button';
 import { useEffect, useState } from 'react';
 import { fetchMedicalType, fetchProductType, fetchSellingUnit, fetchSupplier, getUser } from '@/app/lib/data';
 import { useFormState } from 'react-dom';
-import { createStock } from '@/app/lib/actions';
+import { createStock, importState, importStock } from '@/app/lib/actions';
+import { createWriteStream } from 'fs';
 
 export default function Form() {
 
@@ -13,7 +14,9 @@ export default function Form() {
   // const [state, dispatch] = useFormState(createStock, initialState);
   const [state, dispatch] = useFormState(createStock, initialState);
 
-  const [file, setFile] = useState(null);
+  // const [file, setFile] = useState(null);
+  const [formData, setFormData] = useState(new FormData());
+  const [importResult, setImportResult] = useState<importState | null>(null);
 
   const [user, setUser] = useState();
   const [supplier, setSupplier] = useState([]);
@@ -21,9 +24,20 @@ export default function Form() {
   const [medicalType, setMedicalType] = useState([]);
   const [sellingUnit, setSellingUnit] = useState([]);
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    setFile(selectedFile);
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const file = event.target.files[0];
+      const newFormData = new FormData();
+      newFormData.append('file', file);
+      setFormData(newFormData);
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const result = await importStock({}, formData);
+    console.log('result', result);
+    setImportResult(result);
   };
 
   useEffect(() => {
@@ -395,6 +409,11 @@ export default function Form() {
                   ))}
               </div>
             </div>
+            <div aria-live="polite" aria-atomic="true">
+              {state.message ? (
+                <p className="mt-2 text-sm text-red-500">{state.message}</p>
+              ) : null}
+            </div>
             <div className="mt-6 flex justify-end gap-4">
               <Link
                 href="/dashboard/stock-management"
@@ -409,7 +428,7 @@ export default function Form() {
         </form >
       ) : (
 
-        <form>
+        <form onSubmit={handleSubmit} >
           <div className="rounded-md bg-gray-50 p-4 md:p-6">
             <div className="mb-4">
               <label htmlFor="customer" className="mb-2 block text-sm font-medium">
@@ -422,10 +441,15 @@ export default function Form() {
            rounded-md shadow-sm appearance-none focus:outline-none focus:ring-blue-500
            focus:border-blue-500"
                   onChange={handleFileChange}
-                  id="stock"
-                  placeholder="stock"
+                  id="file"
+                  placeholder='Choose file'
                 />
               </div>
+            </div>
+            <div aria-live="polite" aria-atomic="true">
+              {importResult?.message ? (
+                <p className="mt-2 text-sm text-red-500">{importResult.message}</p>
+              ) : null}
             </div >
           </div >
           <div className="mt-6 flex justify-end gap-4">

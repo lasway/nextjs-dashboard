@@ -3,7 +3,7 @@ import Breadcrumbs from '@/app/ui/Stock-Management/breadcrumbs';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Import Data',
+    title: 'create stock',
 };
 
 export default async function Page() {

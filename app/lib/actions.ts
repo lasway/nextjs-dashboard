@@ -6,6 +6,8 @@ import { PrismaClient } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod';
+import Papa from 'papaparse';
+import { connect } from 'http2';
 
 const prisma = new PrismaClient()
 export async function authenticate(
@@ -74,8 +76,6 @@ const FormSchema = z.object({
 
 
 const CreateProductStock = FormSchema.omit({ id: true });
-
-// console.log('formschema:', CreateProductStock);
 
 // For update, you might want to remove some fields that shouldn't be updated
 const UpdateProductStock = FormSchema.omit({ id: true });
@@ -165,55 +165,98 @@ export async function createStock(prevState: State, formData: FormData) {
 
         // Create a new product if it doesn't exist
         if (!existingProduct) {
-            const newProduct = await prisma.specialProduct.create({
-                data: {
-                    genericName,
-                    brandName,
+            // check if product exist in special Product table
+            const specialProduct = await prisma.specialProduct.findFirst({
+                where: {
+                    genericName: genericName,
+                    brandName: brandName,
                     medicineStrength: MedicineStrength,
-                    productType,
                     dosageType: sellingUnit,
                     addo: addo?.addo
                 }
             });
-            productID = newProduct.id;
 
-            // Save product data in productStock table
-            await prisma.productStock.create({
-                data: {
-                    addedDate: isoAddedDate,
-                    supplier: supplierId,
-                    sellingUnit,
-                    quantity,
-                    reorderQuantity: reOrder,
-                    pricePerStorageUnit: buyingPrice,
-                    sellingPricePerStorageUnit: sellingPrice,
-                    expiryDate: isoExpiryDate,
-                    addo: addo?.addo,
-                    specialProduct: productID
+            if (specialProduct) {
+                productID = specialProduct.id;
+            } else {
+                // Save product data in specialProduct table
+                const newProduct = await prisma.specialProduct.create({
+                    data: {
+                        genericName,
+                        brandName,
+                        medicineStrength: MedicineStrength,
+                        productType,
+                        dosageType: sellingUnit,
+                        addo: addo?.addo
+                    }
+                });
+                productID = newProduct.id;
+            }
+
+            // check if the product exist in productStock table
+            const productStock = await prisma.productStock.findFirst({
+                where: {
+                    specialProduct: productID,
+                    addo: addo?.addo
                 }
             });
+
+            if (productStock) {
+                return {
+                    // alert: 'Product already exists',
+                    message: 'Product already exists.'
+                };
+            } else {
+                // Save product data in productStock table
+                await prisma.productStock.create({
+                    data: {
+                        addedDate: isoAddedDate,
+                        supplier: supplierId,
+                        sellingUnit,
+                        quantity,
+                        reorderQuantity: reOrder,
+                        pricePerStorageUnit: buyingPrice,
+                        sellingPricePerStorageUnit: sellingPrice,
+                        expiryDate: isoExpiryDate,
+                        addo: addo?.addo,
+                        specialProduct: productID
+                    }
+                });
+            }
 
         } else {
             productID = existingProduct.id;
-            // Save product data in productStock table
-            await prisma.productStock.create({
-                data: {
-                    addedDate: isoAddedDate,
-                    supplier: supplierId,
-                    sellingUnit,
-                    quantity,
-                    reorderQuantity: reOrder,
-                    pricePerStorageUnit: buyingPrice,
-                    sellingPricePerStorageUnit: sellingPrice,
-                    expiryDate: isoExpiryDate,
-                    addo: addo?.addo,
+            // check id if the product exist in productStock table
+            const productStock = await prisma.productStock.findFirst({
+                where: {
                     addoProduct: productID,
+                    addo: addo?.addo
                 }
             });
+
+            if (productStock) {
+                return {
+                    // alert: 'Product already exists',
+                    message: 'Product already exists.'
+                };
+            } else {
+                // Save product data in productStock table
+                await prisma.productStock.create({
+                    data: {
+                        addedDate: isoAddedDate,
+                        supplier: supplierId,
+                        sellingUnit,
+                        quantity,
+                        reorderQuantity: reOrder,
+                        pricePerStorageUnit: buyingPrice,
+                        sellingPricePerStorageUnit: sellingPrice,
+                        expiryDate: isoExpiryDate,
+                        addo: addo?.addo,
+                        addoProduct: productID
+                    }
+                });
+            }
         }
-
-        console.log('Product created successfully and redirect to another page');
-
         // console.log('complete redirect')
     } catch (error) {
         // throw error;
@@ -222,11 +265,106 @@ export async function createStock(prevState: State, formData: FormData) {
             message: 'Database Error: Failed to Create stock.',
         };
     }
-
-    revalidatePath('/dashboard/stock-management');
-    redirect('/dashboard/stock-management');
+    revalidatePath('/dashboard/stock-management')
+    redirect('/dashboard/stock-management')
 }
 
+const ImportStock = z.object({
+    file: z.any(),
+});
+
+export type importState = {
+    errors?: {
+        file?: string[];
+    };
+    message?: string | null;
+};
+
+export async function importStock(prevState: importState, formData: FormData) {
+    const validatedFields = ImportStock.safeParse(formData);
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.errors,
+        };
+    }
+    const file = formData.get('file') as File;
+    if (!file) {
+        return {
+            errors: {
+                file: ['Please select a file']
+            },
+        };
+    }
+    // i want to add data in the file(csv)
+    const data = await file.text();
+    const rows = data.split('\n');
+    const headers = rows[0].split(',');
+    const products = rows.slice(1);
+    const errors: string[] = [];
+    console.log(products);
+    for (const entry of products) {
+        try {
+            const columns = entry.split(',');
+            // console.log(columns);
+            const genericName = columns[headers.indexOf('genericName')];
+            const brandName = columns[headers.indexOf('brandName')];
+            const medicineStrength = columns[headers.indexOf('medicineStrength')];
+            // const productType = columns[headers.indexOf('Product Type')];
+            const sellingUnit = columns[headers.indexOf('dosageType')];
+
+            // check if product exist in addoProduct Product table
+            const existingProduct = await prisma.aDDOProduct.findFirst({
+                where: {
+                    genericName: genericName,
+                    brandName: brandName,
+                    medicineStrength: medicineStrength,
+                }
+            });
+
+            const sellingUnitId = await prisma.option.findFirst({
+                where: {
+                    en: sellingUnit,
+                },
+                select: {
+                    id: true,
+                    key: true,
+                    en: true,
+                    sw: true,
+                }
+            });
+
+            console.log(sellingUnitId);
+
+            if (!existingProduct) {
+                // Save product data in addoProduct table
+                await prisma.aDDOProduct.create({
+                    data: {
+                        genericName,
+                        brandName,
+                        medicineStrength: medicineStrength,
+                        dosageType: sellingUnitId?.id,
+                        compoundKey: `${genericName}-${brandName}-${medicineStrength}-${sellingUnit}`,
+                    }
+                });
+            } else {
+                return {
+                    message: 'Product already exists.'
+                };
+            }
+
+        } catch (error) {
+            console.error('Database Error:', error);
+            return {
+                message: 'Database Error: Failed to Create stock.',
+            };
+        }
+    }
+
+    return {
+        message: 'Stock imported successfully'
+    };
+}
 
 export async function deleteProductStock(id: string) {
     try {
@@ -316,4 +454,42 @@ export async function updateProductStock(id: string, prevState: State, formData:
 
     revalidatePath('/dashboard/stock-management');
     redirect('/dashboard/stock-management');
+}
+
+export async function updateMasterList(id: string, prevState: State, formData: FormData) {
+    //validate data
+    const validatedFields = UpdateProductStock.safeParse({
+        genericName: formData.get('genericName'),
+        brandName: formData.get('brandName'),
+        MedicineStrength: formData.get('MedicineStrength'),
+        DosageType: formData.get('DosageType'),
+    });
+    if (!validatedFields.success) {
+        const validationErrors = validatedFields.error.flatten().fieldErrors;
+        console.log('Validation errors:', validationErrors);
+        return {
+            errors: validationErrors,
+            message: 'Invalid form data. Please check the form and try again.'
+        };
+    }
+    try {
+        await prisma.aDDOProduct.update({
+            where: { id: id },
+            data: {
+                genericName: validatedFields.data.genericName,
+                brandName: validatedFields.data.brandName,
+                medicineStrength: validatedFields.data.MedicineStrength,
+                dosageType: validatedFields.data.DosageType
+            }
+        });
+        console.log('Product updated successfully and redirect to another page');
+    } catch (error) {
+        console.error('Database Error:', error);
+        return {
+            message: 'Database Error: Failed to update stock.',
+        };
+    }
+
+    revalidatePath('/dashboard/master-list');
+    redirect('/dashboard/master-list');
 }

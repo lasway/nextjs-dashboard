@@ -11,6 +11,7 @@ import Search from "@/app/ui/search";
 import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import { get } from "http";
 import { Metadata } from "next";
+import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 export default function Page() {
 
@@ -48,19 +49,60 @@ export default function Page() {
     return (
         <main>
             <div className="w-full">
-                <div className="flex w-full items-center justify-between">
-                    <h1 className={`${lusitana.className} text-2xl`}>REPORTS</h1>
-                </div>
-                {user?.roles === 'Owner' ? (
-                    <Filter filterChange={handleFilter} />
-                ) : (
-                    <Header onFilterChange={handleFilterChange} />
-                )}
-                <Suspense fallback={<InvoicesTableSkeleton />}>
-                    <Expensestable region={region} district={district} startDate={startDate} endDate={endDate} />
-                </Suspense>
-                <div className="mt-5 flex w-full justify-center">
-                    {/* <Pagination query={query} /> */}
+                <div className="gap-4 grid ">
+                    <div className="flex w-full items-center justify-between">
+                        <h1 className={`${lusitana.className} text-2xl`}>List of Reports</h1>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <Link href="/dashboard/reports/expenses">
+                            <div className="bg-blue-500 rounded-md shadow-md cursor-pointer">
+                                <div className="p-4">
+                                    <h2 className="text-white text-2xl">Expenses</h2>
+                                    <p className="text-white">View expenses report</p>
+                                </div>
+                            </div>
+                        </Link>
+                        <Link href="/dashboard/reports/sales">
+                            <div className="bg-blue-500 rounded-md shadow-md cursor-pointer">
+                                <div className="p-4">
+                                    <h2 className="text-white text-2xl">Sales</h2>
+                                    <p className="text-white">View sales report</p>
+                                </div>
+                            </div>
+                        </Link>
+                        <Link href="/dashboard/reports/topSold">
+                            <div className="bg-blue-500 rounded-md shadow-md cursor-pointer">
+                                <div className="p-4">
+                                    <h2 className="text-white text-2xl">Top Sold Products</h2>
+                                    <p className="text-white">View top sold report</p>
+                                </div>
+                            </div>
+                        </Link>
+                        <Link href="/dashboard/reports/leastSold">
+                            <div className="bg-blue-500 rounded-md shadow-md cursor-pointer">
+                                <div className="p-4">
+                                    <h2 className="text-white text-2xl">Least Sold Products</h2>
+                                    <p className="text-white">View least sold report</p>
+                                </div>
+                            </div>
+                        </Link>
+                        <Link href="/dashboard/reports/supplier">
+                            <div className="bg-blue-500 rounded-md shadow-md cursor-pointer">
+                                <div className="p-4">
+                                    <h2 className="text-white text-2xl">Suppliers</h2>
+                                    <p className="text-white">View suppliers report</p>
+                                </div>
+                            </div>
+                        </Link>
+                        <Link href="/products-report">
+                            <div className="bg-blue-500 rounded-md shadow-md cursor-pointer">
+                                <div className="p-4">
+                                    <h2 className="text-white text-2xl">Products</h2>
+                                    <p className="text-white">View products report</p>
+                                </div>
+                            </div>
+                        </Link>
+                    </div>
                 </div>
             </div>
         </main>

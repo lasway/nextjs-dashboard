@@ -13,47 +13,75 @@ const ITEMS_PER_PAGE = 6;
 // Functions to fetch data for user role "Supervisor"
 
 export async function fetchCardDataSupervisor(
-    region: string,
-    district: string,
+    queryType: 'all' | 'dates' | 'region',
     startDate: string,
     endDate: string,
+    region?: string,
+    district?: string,
 ) {
     noStore();
     try {
         const start = new Date(startDate);
         const end = new Date(endDate);
 
-        const regionID = await prisma.region.findMany({
-            where: {
-                name: region
-            },
-            select: {
-                id: true,
-            }
-        });
+        let addoID = [];
 
-        const districtID = await prisma.district.findMany({
-            where: {
-                name: district
-            },
-            select: {
-                id: true,
-            }
-        });
+        if (queryType === 'all') {
+            const regionIdd = await prisma.region.findMany({
+                where: {
+                    name: region
+                },
+                select: {
+                    id: true,
+                }
+            });
 
-        const addoID = await prisma.addo.findMany({
-            where: {
-                region: regionID[0].id,
-                district: districtID[0].id,
-            },
-            select: {
-                id: true,
-                name: true,
-            }
-        });
+            const districtID = await prisma.district.findMany({
+                where: {
+                    name: district,
+                    region: regionIdd[0].id
+                },
+                select: {
+                    id: true,
+                }
+            });
 
+            addoID = await prisma.addo.findMany({
+                where: {
+                    district: districtID[0]?.id,
+                },
+                select: {
+                    id: true,
+                    name: true,
+                }
+            });
+        }
 
-        // Calculate total sales associated with the addo
+        if (queryType === 'dates') {
+            addoID = await prisma.addo.findMany();
+        }
+
+        if (queryType === 'region') {
+            const regionID = await prisma.region.findMany({
+                where: {
+                    name: region
+                },
+                select: {
+                    id: true,
+                }
+            });
+
+            addoID = await prisma.addo.findMany({
+                where: {
+                    region: regionID[0].id,
+                },
+                select: {
+                    id: true,
+                    name: true,
+                }
+            });
+        }
+
         const totalSale = await prisma.sale.aggregate({
             _sum: {
                 total: true,
@@ -87,7 +115,6 @@ export async function fetchCardDataSupervisor(
         const totalSales =
             (totalSale?._sum?.total || 0) - (totalDiscount?._sum?.discount || 0);
 
-        // Calculate total expenses associated with the addo
         const totalExpenses = await prisma.expense.aggregate({
             _sum: {
                 amount: true,
@@ -103,10 +130,8 @@ export async function fetchCardDataSupervisor(
             },
         });
 
-        // Calculate total revenue
         const totalRevenue = totalSales - (totalExpenses?._sum?.amount || 0);
 
-        // number Addos
         const addoCount = addoID.length;
 
         return {
@@ -122,40 +147,76 @@ export async function fetchCardDataSupervisor(
         await prisma.$disconnect();
     }
 }
-export async function fetchExpensesSupervisor(region: string, district: string, startDate: string, endDate: string) {
+
+export async function fetchExpensesSupervisor(
+    queryType: 'all' | 'dates' | 'region',
+    startDate: string,
+    endDate: string,
+    region?: string,
+    district?: string,
+) {
     noStore();
     try {
         const start = new Date(startDate);
         const end = new Date(endDate);
 
-        const regionID = await prisma.region.findMany({
-            where: {
-                name: region
-            },
-            select: {
-                id: true,
-            }
-        })
+        let addoID = [];
+        if (queryType === 'all') {
+            const regionIdd = await prisma.region.findMany({
+                where: {
+                    name: region
+                },
+                select: {
+                    id: true,
+                }
+            });
 
-        const districtID = await prisma.district.findMany({
-            where: {
-                name: district
-            },
-            select: {
-                id: true,
-            }
-        })
+            const districtID = await prisma.district.findMany({
+                where: {
+                    name: district,
+                    region: regionIdd[0].id
+                },
+                select: {
+                    id: true,
+                }
+            });
 
-        const addoID = await prisma.addo.findMany({
-            where: {
-                region: regionID[0].id,
-                district: districtID[0].id,
-            },
-            select: {
-                id: true,
+            addoID = await prisma.addo.findMany({
+                where: {
+                    district: districtID[0]?.id,
+                },
+                select: {
+                    id: true,
+                    name: true,
+                }
+            });
+        }
 
-            }
-        })
+        if (queryType === 'dates') {
+            addoID = await prisma.addo.findMany();
+        }
+
+        if (queryType === 'region') {
+            const regionID = await prisma.region.findMany({
+                where: {
+                    name: region
+                },
+                select: {
+                    id: true,
+                }
+            });
+
+            addoID = await prisma.addo.findMany({
+                where: {
+                    region: regionID[0].id,
+                },
+                select: {
+                    id: true,
+                    name: true,
+                }
+            });
+        }
+
 
         const expenses = await prisma.expense.groupBy({
             by: ['date'],
@@ -197,41 +258,74 @@ export async function fetchExpensesSupervisor(region: string, district: string, 
 
 
 }
-
-export async function fetchSalesSupervisor(region: string, district: string, startDate: string, endDate: string) {
+export async function fetchSalesSupervisor(
+    queryType: 'all' | 'dates' | 'region',
+    startDate: string,
+    endDate: string,
+    region?: string,
+    district?: string,
+) {
     noStore();
     try {
         const start = new Date(startDate);
         const end = new Date(endDate);
 
-        const regionID = await prisma.region.findMany({
-            where: {
-                name: region
-            },
-            select: {
-                id: true,
-            }
-        })
+        let addoID = [];
+        if (queryType === 'all') {
+            const regionIdd = await prisma.region.findMany({
+                where: {
+                    name: region
+                },
+                select: {
+                    id: true,
+                }
+            });
 
-        const districtID = await prisma.district.findMany({
-            where: {
-                name: district
-            },
-            select: {
-                id: true,
-            }
-        })
+            const districtID = await prisma.district.findMany({
+                where: {
+                    name: district,
+                    region: regionIdd[0].id
+                },
+                select: {
+                    id: true,
+                }
+            });
 
-        const addoID = await prisma.addo.findMany({
-            where: {
-                region: regionID[0].id,
-                district: districtID[0].id,
-            },
-            select: {
-                id: true,
+            addoID = await prisma.addo.findMany({
+                where: {
+                    district: districtID[0]?.id,
+                },
+                select: {
+                    id: true,
+                    name: true,
+                }
+            });
+        }
 
-            }
-        })
+        if (queryType === 'dates') {
+            addoID = await prisma.addo.findMany();
+        }
+
+        if (queryType === 'region') {
+            const regionID = await prisma.region.findMany({
+                where: {
+                    name: region
+                },
+                select: {
+                    id: true,
+                }
+            });
+
+            addoID = await prisma.addo.findMany({
+                where: {
+                    region: regionID[0].id,
+                },
+                select: {
+                    id: true,
+                    name: true,
+                }
+            });
+        }
 
         const salesData = await prisma.sale.groupBy({
             by: ['sellingDate'],
@@ -267,6 +361,7 @@ export async function fetchSalesSupervisor(region: string, district: string, sta
         await prisma.$disconnect();
     }
 }
+
 export async function fetchMasterList(query: string, currentPage: number,) {
     noStore();
     const offset = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -358,7 +453,6 @@ export async function fetchMasterListPages(query: string) {
     }
 
 }
-
 export async function fetchTopProductSupervisor(
     region: string,
     district: string,
@@ -390,7 +484,7 @@ export async function fetchTopProductSupervisor(
         const addoID = await prisma.addo.findMany({
             where: {
                 region: regionID[0].id,
-                district: districtID[0].id,
+                district: districtID[0]?.id,
             },
             select: {
                 id: true,
@@ -409,6 +503,11 @@ export async function fetchTopProductSupervisor(
                 },
             },
             include: {
+                Addo: {
+                    select: {
+                        name: true,
+                    },
+                },
                 ADDOProduct: {
                     select: {
                         brandName: true,
@@ -447,9 +546,89 @@ export async function fetchTopProductSupervisor(
 
         const sortedProducts = Object.keys(productQuantities).sort((a, b) => productQuantities[b] - productQuantities[a]);
 
-        const topProducts = sortedProducts.slice(0, 5);
+        const topProducts = sortedProducts.slice(0, 6);
 
         const frequentlySoldReport = topProducts.map((productName) => ({
+            'addo name': saleData[0].Addo?.name,
+            'Medicine Name': productName.trim(),
+            'Total Quantity Sold': productQuantities[productName],
+        }));
+
+        return frequentlySoldReport;
+
+        // Set the store property with the sorted report if needed
+        // store.setProp("FrequentlySoldReport", frequentlySoldReport);
+    } catch (error) {
+        console.error('Error fetching top products:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+
+export async function fetchTopProductSupervisors(
+    startDate: string,
+    endDate: string,
+) {
+    try {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        const saleData = await prisma.productSale.findMany({
+            where: {
+                createdAt: {
+                    gte: start,
+                    lte: end,
+                },
+            },
+            include: {
+                Addo: {
+                    select: {
+                        name: true,
+                    },
+                },
+                ADDOProduct: {
+                    select: {
+                        brandName: true,
+                        genericName: true,
+                        medicineStrength: true,
+                    },
+                },
+                SpecialProduct: {
+                    select: {
+                        brandName: true,
+                        genericName: true,
+                        medicineStrength: true,
+                    },
+                },
+            },
+        });
+
+
+        // Initialize the product quantities with all products set to Zero
+        const productQuantities: { [key: string]: number } = {};
+
+        saleData.forEach((sale) => {
+            if (sale && sale.quantity) {
+                const productName = sale.ADDOProduct
+                    ? `${sale.ADDOProduct.brandName} ${sale.ADDOProduct.genericName} ${sale.ADDOProduct.medicineStrength}`
+                    : sale.SpecialProduct
+                        ? `${sale.SpecialProduct.brandName} ${sale.SpecialProduct.genericName} ${sale.SpecialProduct.medicineStrength}`
+                        : '';
+                if (productName in productQuantities) {
+                    productQuantities[productName] += sale.quantity;
+                } else {
+                    productQuantities[productName] = sale.quantity;
+                }
+            }
+        });
+
+        const sortedProducts = Object.keys(productQuantities).sort((a, b) => productQuantities[b] - productQuantities[a]);
+
+        const topProducts = sortedProducts.slice(0, 6);
+
+        const frequentlySoldReport = topProducts.map((productName) => ({
+            'addo name': saleData[0].Addo?.name,
             'Medicine Name': productName.trim(),
             'Total Quantity Sold': productQuantities[productName],
         }));
@@ -497,7 +676,7 @@ export async function fetchLeastSoldProductsSupervisor(
         const addoIDs = await prisma.addo.findMany({
             where: {
                 region: regionID[0].id,
-                district: districtID[0].id,
+                district: districtID[0]?.id,
             },
             select: {
                 id: true,
@@ -515,6 +694,11 @@ export async function fetchLeastSoldProductsSupervisor(
                 },
             },
             include: {
+                Addo: {
+                    select: {
+                        name: true,
+                    },
+                },
                 ADDOProduct: {
                     select: {
                         brandName: true,
@@ -560,6 +744,7 @@ export async function fetchLeastSoldProductsSupervisor(
         const topTenProducts = sortedProducts.slice(0, 5);
 
         const leastSoldReport = topTenProducts.map((productName) => ({
+            'addo name': sales[0].Addo?.name,
             'Medicine Name': productName.trim(),
             'Total Quantity Sold': productQuantities[productName],
         }));
@@ -572,6 +757,196 @@ export async function fetchLeastSoldProductsSupervisor(
         console.error('Error fetching least sold products:', error);
         throw error;
     } finally {
+        await prisma.$disconnect();
+    }
+}
+
+export async function fetchLeastSoldProductsSupervisors(
+    startDate: string,
+    endDate: string,
+) {
+    try {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        const sales = await prisma.productSale.findMany({
+            where: {
+                createdAt: {
+                    gte: start,
+                    lte: end,
+                },
+            },
+            include: {
+                Addo: {
+                    select: {
+                        name: true,
+                    },
+                },
+                ADDOProduct: {
+                    select: {
+                        brandName: true,
+                        genericName: true,
+                        medicineStrength: true,
+                    },
+                },
+                SpecialProduct: {
+                    select: {
+                        brandName: true,
+                        genericName: true,
+                        medicineStrength: true,
+                    },
+                },
+            },
+        });
+
+
+        // Initialize the product quantities with all products set to Zero
+        const productQuantities: { [key: string]: number } = {};
+
+        sales.forEach((sale) => {
+            if (sale && sale.quantity) {
+                const productName = sale.ADDOProduct
+                    ? `${sale.ADDOProduct.brandName} ${sale.ADDOProduct.genericName} ${sale.ADDOProduct.medicineStrength}`
+                    : sale.SpecialProduct
+                        ? `${sale.SpecialProduct.brandName} ${sale.SpecialProduct.genericName} ${sale.SpecialProduct.medicineStrength}`
+                        : '';
+
+                if (productName in productQuantities) {
+                    productQuantities[productName] += sale.quantity;
+                } else {
+                    productQuantities[productName] = sale.quantity;
+                }
+            }
+        });
+
+        // Sort the products by quantity sold
+        const sortedProducts = Object.keys(productQuantities).sort(
+            (a, b) => productQuantities[a] - productQuantities[b],
+        );
+
+        const topTenProducts = sortedProducts.slice(0, 5);
+
+        const leastSoldReport = topTenProducts.map((productName) => ({
+            'addo name': sales[0].Addo?.name,
+            'Medicine Name': productName.trim(),
+            'Total Quantity Sold': productQuantities[productName],
+        }));
+
+        return leastSoldReport;
+
+        // Set the store property with the sorted report if needed
+        // store.setProp("LeastSoldReport", leastSoldReport);
+    } catch (error) {
+        console.error('Error fetching least sold products:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+export async function fetchMostSoldProductsSupervisor(
+    region: string,
+    district: string,
+    startDate: string,
+    endDate: string,
+) {
+    try {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const regionID = await prisma.region.findMany({
+            where: {
+                name: region
+            },
+            select: {
+                id: true,
+            }
+        });
+        const districtID = await prisma.district.findMany({
+            where: {
+                name: district
+            },
+            select: {
+                id: true,
+            }
+        });
+
+        const addoIDs = await prisma.addo.findMany({
+            where: {
+                region: regionID[0].id,
+                district: districtID[0]?.id,
+            },
+            select: {
+                id: true,
+                name: true
+            }
+        });
+        // Initialize an object to hold the data for each addo
+        const addoData: { [key: string]: { [key: string]: number } } = {};
+
+        // Fetch sales data for each addo sepately
+
+        for (const addo of addoIDs) {
+            const sales = await prisma.productSale.findMany({
+                where: {
+                    addo: addo.id,
+                    createdAt: {
+                        gte: start,
+                        lte: end,
+                    },
+                },
+                include: {
+                    Addo: {
+                        select: {
+                            name: true,
+                        },
+                    },
+                    ADDOProduct: {
+                        select: {
+                            brandName: true,
+                            genericName: true,
+                            medicineStrength: true,
+                        },
+                    },
+                    SpecialProduct: {
+                        select: {
+                            brandName: true,
+                            genericName: true,
+                            medicineStrength: true,
+                        },
+                    },
+                },
+            });
+            // initialize product quantities for this addo
+            const productQuantities: { [key: string]: number } = {};
+
+            // Aggregate sales data for this addo
+            sales.forEach((sale) => {
+                if (sale && sale.quantity) {
+                    const productName = sale.ADDOProduct
+                        ? `${sale.ADDOProduct.brandName} ${sale.ADDOProduct.genericName} ${sale.ADDOProduct.medicineStrength}`
+                        : sale.SpecialProduct
+                            ? `${sale.SpecialProduct.brandName} ${sale.SpecialProduct.genericName} ${sale.SpecialProduct.medicineStrength}`
+                            : '';
+                    if (productName in productQuantities) {
+                        productQuantities[productName] += sale.quantity;
+                    } else {
+                        productQuantities[productName] = sale.quantity;
+                    }
+                }
+            });
+
+            // sort products quantities by total quantities in descending order
+            const sortedProducts = Object.entries(productQuantities).sort((a, b) => b[1] - a[1]);
+
+            // Store sorted product quantities for this addo
+            addoData[addo.name] = Object.fromEntries(sortedProducts)
+        }
+
+        return addoData
+    } catch (error) {
+        console.error('Error fetching most sold products:', error);
+        throw error;
+    }
+    finally {
         await prisma.$disconnect();
     }
 }
@@ -600,7 +975,7 @@ export async function fetchExpensesReportSupervisor(region: string, district: st
         const addoIDs = await prisma.addo.findMany({
             where: {
                 region: regionID[0].id,
-                district: districtID[0].id,
+                district: districtID[0]?.id,
             },
             select: {
                 id: true,
@@ -653,6 +1028,96 @@ export async function fetchExpensesReportSupervisor(region: string, district: st
         await prisma.$disconnect();
     }
 
+}
+export async function fetchSalesReportSupervisor(region: string, district: string, startDate: string, endDate: string) {
+    try {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const regionID = await prisma.region.findMany({
+            where: {
+                name: region
+            },
+            select: {
+                id: true,
+            }
+        });
+        const districtID = await prisma.district.findMany({
+            where: {
+                name: district
+            },
+            select: {
+                id: true,
+            }
+        });
+        const addoIDs = await prisma.addo.findMany({
+            where: {
+                region: regionID[0].id,
+                district: districtID[0]?.id,
+            },
+            select: {
+                id: true,
+            }
+        });
+        const salesData = await prisma.productSale.findMany({
+            where: {
+                addo: {
+                    in: addoIDs.map((addo) => addo.id),
+                },
+                createdAt: {
+                    gte: start,
+                    lte: end,
+                },
+            },
+            orderBy: {
+                createdAt: 'asc',
+            },
+            include: {
+                Addo: {
+                    select: {
+                        name: true,
+                    },
+                },
+                ADDOProduct: {
+                    select: {
+                        brandName: true,
+                        genericName: true,
+                        medicineStrength: true,
+                    },
+                },
+                SpecialProduct: {
+                    select: {
+                        brandName: true,
+                        genericName: true,
+                        medicineStrength: true,
+                    },
+                },
+            },
+        });
+        // console.log(salesData)
+
+        const salesReport = salesData.map((sale) => ({
+            id: sale.id,
+            addo: sale.Addo?.name,
+            product: sale.ADDOProduct
+                ? `${sale.ADDOProduct.brandName} ${sale.ADDOProduct.genericName} ${sale.ADDOProduct.medicineStrength}`.trim()
+                : sale.SpecialProduct
+                    ? `${sale.SpecialProduct.brandName} ${sale.SpecialProduct.genericName} ${sale.SpecialProduct.medicineStrength}`
+                    : ''.trim(),
+            price: sale.price,
+            quantity: sale.quantity,
+            total: sale.subtotal,
+            createdAt: sale.createdAt,
+        }));
+        // console.log(salesReport)
+        return salesReport;
+    }
+    catch (error) {
+        console.error('Error fetching sales report:', error);
+        throw error;
+    }
+    finally {
+        await prisma.$disconnect();
+    }
 }
 
 // functions to fetch data for user role "Owner"
@@ -1306,7 +1771,6 @@ export async function fetchLeastSoldProductsAddo(
         await prisma.$disconnect();
     }
 }
-
 export async function fetchSupplier() {
     try {
         const addo = await fetchUserAddo();
@@ -1325,7 +1789,6 @@ export async function fetchSupplier() {
         await prisma.$disconnect();
     }
 }
-
 export async function fetchProductType() {
     try {
         const productTypeData = await prisma.option.findMany({
@@ -1348,7 +1811,6 @@ export async function fetchProductType() {
         await prisma.$disconnect();
     }
 }
-
 export async function fetchMedicalType() {
     try {
         const medicalTypeData = await prisma.option.findMany({
@@ -1372,7 +1834,6 @@ export async function fetchMedicalType() {
         await prisma.$disconnect();
     }
 }
-
 export async function fetchSellingUnit() {
     try {
         const sellingUnitData = await prisma.option.findMany({
@@ -1467,7 +1928,6 @@ export async function getUser() {
         await prisma.$disconnect();
     }
 }
-
 export async function fetchRegion() {
     try {
         const regionData = await prisma.region.findMany();
@@ -1479,7 +1939,6 @@ export async function fetchRegion() {
         await prisma.$disconnect();
     }
 }
-
 export async function fetchDistrict(region: string) {
     try {
         const regionID = await prisma.region.findUnique({

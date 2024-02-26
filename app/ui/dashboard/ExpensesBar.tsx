@@ -12,8 +12,9 @@ import {
     PointElement,
     LineElement,
 } from "chart.js";
-import { fetchExpenses, fetchExpensesSupervisor, getUser } from '@/app/lib/data';
+import { fetchExpenses, fetchExpensesSupervisor, fetchExpensesSupervisors, getUser } from '@/app/lib/data';
 import { formatDateToLocal } from '@/app/lib/utils';
+import { start } from 'repl';
 
 ChartJS.register(
     CategoryScale,
@@ -28,17 +29,24 @@ ChartJS.register(
 export default function ExpensesBar({ region, district, startDate, endDate }: { region: string, district: string, startDate: string, endDate: string }) {
 
     const [expenses, setExpenses] = useState([]);
-    const [sales, setSales] = useState([]);
 
     useEffect(() => {
         try {
             const fetchData = async () => {
                 const user = await getUser();
                 if (user?.roles === 'Supervisor') {
-                    if (startDate && endDate && region && district) {
-                        const expenses = await fetchExpensesSupervisor(region, district, startDate, endDate);
-
-                        setExpenses(expenses);
+                    if (region && district && startDate && endDate) {
+                        // const cardData = await fetchCardDataSupervisorByAll(region, district, startDate, endDate);
+                        const cardData = await fetchExpensesSupervisor('all', startDate, endDate, region, district);
+                        setExpenses(cardData);
+                    } else if (region && startDate && endDate) {
+                        // const cardData = await fetchCardDataSupervisorByRegion(region, startDate, endDate);
+                        const cardData = await fetchExpensesSupervisor('region', startDate, endDate, region, undefined);
+                        setExpenses(cardData);
+                    } else if (startDate && endDate) {
+                        // const cardData = await fetchCardDataSupervisorByDates(startDate, endDate);
+                        const cardData = await fetchExpensesSupervisor('dates', startDate, endDate, undefined, undefined);
+                        setExpenses(cardData);
                     }
                 } else if (user?.roles === 'Owner') {
                     if (startDate && endDate) {

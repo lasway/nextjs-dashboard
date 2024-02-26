@@ -15,13 +15,37 @@ import ExpensesBar from '@/app/ui/dashboard/ExpensesBar';
 import ExpensesDoughnut from '@/app/ui/dashboard/ExpenseDoug';
 import SalesLine from '@/app/ui/dashboard/SalesLine';
 import SalesBar from '@/app/ui/dashboard/SalesBar';
-import { Metadata } from 'next';
+
 
 
 export default function Page() {
 
-    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-    const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+    // Set default values for startDate and endDate
+    const [startDate, setStartDate] = useState(getFirstDayOfMonth()); // First day of current month
+    const [endDate, setEndDate] = useState(getTodayDate()); // Today's date
+
+    // Function to get the first day of the current month
+    function getFirstDayOfMonth() {
+        const today = new Date();
+        return today.getFullYear() + '-' + ('0' + (today.getMonth() + 1)).slice(-2) + '-01';
+    }
+
+    // Function to get today's date
+    function getTodayDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        let month = today.getMonth() + 1;
+        let day = today.getDate();
+
+        if (month < 10) {
+            month = '0' + month;
+        }
+        if (day < 10) {
+            day = '0' + day;
+        }
+
+        return `${year}-${month}-${day}`;
+    }
 
     const [region, setRegion] = useState('');
     const [district, setDistrict] = useState('');

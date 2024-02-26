@@ -1,7 +1,7 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
 import { useEffect, useState } from 'react';
-import { fetchLeastSoldProductsAddo, fetchLeastSoldProductsSupervisor, getUser } from '@/app/lib/data';
+import { fetchLeastSoldProductsAddo, fetchLeastSoldProductsSupervisor, fetchLeastSoldProductsSupervisors, getUser } from '@/app/lib/data';
 export default async function LeastSoldItems({ region, district, startDate, endDate }: { region: string, district: string, startDate: string, endDate: string }) {
 
     const [leastProducts, setLeastProducts] = useState([]);
@@ -12,6 +12,9 @@ export default async function LeastSoldItems({ region, district, startDate, endD
                 if (user?.roles === 'Supervisor') {
                     if (startDate && endDate && region && district) {
                         const leastProducts = await fetchLeastSoldProductsSupervisor(region, district, startDate, endDate);
+                        setLeastProducts(leastProducts);
+                    } else if (startDate && endDate) {
+                        const leastProducts = await fetchLeastSoldProductsSupervisors(startDate, endDate);
                         setLeastProducts(leastProducts);
                     }
                 }

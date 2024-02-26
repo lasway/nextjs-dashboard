@@ -6,8 +6,9 @@ import {
     InboxIcon,
 } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchCardDataAddo, fetchCardDataSupervisor, getUser } from '@/app/lib/data';
+import { fetchCardDataAddo, fetchCardDataSupervisor, fetchCardDataSupervisorByAll, fetchCardDataSupervisorByDates, fetchCardDataSupervisorByRegion, getUser } from '@/app/lib/data';
 import { useEffect, useState } from 'react';
+import { set } from 'zod';
 const iconMap = {
     collected: BanknotesIcon,
     customers: UserGroupIcon,
@@ -35,8 +36,17 @@ export default function CardWrapper({ region, district, startDate, endDate }:
             try {
                 const user = await getUser();
                 if (user?.roles === 'Supervisor') {
-                    if (startDate && endDate && region && district) {
-                        const cardData = await fetchCardDataSupervisor(region, district, startDate, endDate,);
+                    if (region && district && startDate && endDate) {
+                        // const cardData = await fetchCardDataSupervisorByAll(region, district, startDate, endDate);
+                        const cardData = await fetchCardDataSupervisor('all', startDate, endDate, region, district);
+                        setCardData(cardData);
+                    } else if (region && startDate && endDate) {
+                        // const cardData = await fetchCardDataSupervisorByRegion(region, startDate, endDate);
+                        const cardData = await fetchCardDataSupervisor('region', startDate, endDate, region, undefined);
+                        setCardData(cardData);
+                    } else if (startDate && endDate) {
+                        // const cardData = await fetchCardDataSupervisorByDates(startDate, endDate);
+                        const cardData = await fetchCardDataSupervisor('dates', startDate, endDate, undefined, undefined);
                         setCardData(cardData);
                     }
                 }

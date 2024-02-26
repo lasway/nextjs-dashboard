@@ -1,30 +1,26 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
-import { fetchUserAddo } from '@/app/lib/data';
-
 
 const prisma = new PrismaClient();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const addo = "e34daa74-e292-4bdb-a3ab-3988969ee573"
-    const startDate = "11-01-2023"
-    const endDate = "11-30-2023"
-
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
     try {
-        const salesData = await prisma.productStock.findMany({
+        const sellingUnitData = await prisma.option.findMany({
             where: {
-                addo: addo,
-                addedDate: {
-                    gte: start,
-                    lte: end,
+                OptionType: {
+                    name: 'medicalType'
                 }
             },
-        })
-
-        return res.status(200).json({ salesData });
+            select: {
+                id: true,
+                type: true,
+                key: true,
+                en: true,
+                sw: true,
+            },
+        });
+        console.log(sellingUnitData)
+        return res.status(200).json({ sellingUnitData });
     } catch (error) {
         console.error('Error fetching data:', error);
         return res.status(500).json({ error: 'Internal Server Error' });
@@ -32,4 +28,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await prisma.$disconnect();
     }
 }
-

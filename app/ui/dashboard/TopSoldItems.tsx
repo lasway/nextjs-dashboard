@@ -1,6 +1,6 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchTopProductAddo, fetchTopProductSupervisor, getUser } from '@/app/lib/data';
+import { fetchTopProductAddo, fetchTopProductSupervisor, fetchTopProductSupervisors, getUser } from '@/app/lib/data';
 import { useEffect, useState } from 'react';
 export default async function TopSoldItems({ region, district, startDate, endDate }: { region: string, district: string, startDate: string, endDate: string }) {
 
@@ -13,6 +13,9 @@ export default async function TopSoldItems({ region, district, startDate, endDat
                 if (user?.roles === 'Supervisor') {
                     if (startDate && endDate && region && district) {
                         const topProducts = await fetchTopProductSupervisor(region, district, startDate, endDate);
+                        setTopProducts(topProducts);
+                    } else if (startDate && endDate) {
+                        const topProducts = await fetchTopProductSupervisors(startDate, endDate);
                         setTopProducts(topProducts);
                     }
                 }

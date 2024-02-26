@@ -12,7 +12,7 @@ import {
     PointElement,
     LineElement,
 } from "chart.js";
-import { fetchExpenses, fetchExpensesSupervisor, fetchSales, fetchSalesSupervisor, getUser } from '@/app/lib/data';
+import { fetchExpenses, fetchExpensesSupervisor, fetchSales, fetchSalesSupervisor, fetchSalesSupervisors, getUser } from '@/app/lib/data';
 import { formatDateToLocal } from '@/app/lib/utils';
 
 ChartJS.register(
@@ -34,9 +34,18 @@ export default function SalesBar({ region, district, startDate, endDate }: { reg
             const fetchData = async () => {
                 const user = await getUser();
                 if (user?.roles === 'Supervisor') {
-                    if (startDate && endDate && region && district) {
-                        const salesData = await fetchSalesSupervisor(region, district, startDate, endDate);
-                        setSales(salesData);
+                    if (region && district && startDate && endDate) {
+                        // const cardData = await fetchCardDataSupervisorByAll(region, district, startDate, endDate);
+                        const cardData = await fetchSalesSupervisor('all', startDate, endDate, region, district);
+                        setSales(cardData);
+                    } else if (region && startDate && endDate) {
+                        // const cardData = await fetchCardDataSupervisorByRegion(region, startDate, endDate);
+                        const cardData = await fetchSalesSupervisor('region', startDate, endDate, region, undefined);
+                        setSales(cardData);
+                    } else if (startDate && endDate) {
+                        // const cardData = await fetchCardDataSupervisorByDates(startDate, endDate);
+                        const cardData = await fetchSalesSupervisor('dates', startDate, endDate, undefined, undefined);
+                        setSales(cardData);
                     }
                 } else if (user?.roles === 'Owner') {
                     if (startDate && endDate) {

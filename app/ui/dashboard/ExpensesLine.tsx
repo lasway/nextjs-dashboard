@@ -1,7 +1,7 @@
 import { formatDateToLocal, generateYAxis } from '@/app/lib/utils';
 import { CalendarIcon } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchExpenses, fetchExpensesSupervisor, fetchSalesSupervisor, getUser } from '@/app/lib/data';
+import { fetchExpenses, fetchExpensesSupervisor, fetchExpensesSupervisors, fetchSalesSupervisor, getUser } from '@/app/lib/data';
 import { useEffect, useState } from 'react';
 
 import {
@@ -36,9 +36,18 @@ export default function ExpensesLine(
             const fetchData = async () => {
                 const user = await getUser();
                 if (user?.roles === 'Supervisor') {
-                    if (startDate && endDate && region && district) {
-                        const expenses = await fetchExpensesSupervisor(region, district, startDate, endDate);
-                        setExpenses(expenses);
+                    if (region && district && startDate && endDate) {
+                        // const cardData = await fetchCardDataSupervisorByAll(region, district, startDate, endDate);
+                        const cardData = await fetchExpensesSupervisor('all', startDate, endDate, region, district);
+                        setExpenses(cardData);
+                    } else if (region && startDate && endDate) {
+                        // const cardData = await fetchCardDataSupervisorByRegion(region, startDate, endDate);
+                        const cardData = await fetchExpensesSupervisor('region', startDate, endDate, region, undefined);
+                        setExpenses(cardData);
+                    } else if (startDate && endDate) {
+                        // const cardData = await fetchCardDataSupervisorByDates(startDate, endDate);
+                        const cardData = await fetchExpensesSupervisor('dates', startDate, endDate, undefined, undefined);
+                        setExpenses(cardData);
                     }
                 } else if (user?.roles === 'Owner') {
                     if (startDate && endDate) {
