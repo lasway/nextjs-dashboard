@@ -6,8 +6,6 @@ import { PrismaClient } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod';
-import Papa from 'papaparse';
-import { connect } from 'http2';
 
 const prisma = new PrismaClient()
 export async function authenticate(
@@ -72,6 +70,25 @@ const FormSchema = z.object({
     expiryDate: z.string({
         invalid_type_error: 'Incorrect date format',
     }),
+    dosageType: z.string({
+        invalid_type_error: 'Incorrect dosage type',
+    })
+});
+
+const FormSchemas = z.object({
+    id: z.string(),
+    dosageType: z.string({
+        invalid_type_error: 'Incorrect dosage type',
+    }),
+    genericname: z.string({
+        invalid_type_error: 'Incorrect generic name',
+    }),
+    brandname: z.string({
+        invalid_type_error: 'Incorrect brand name',
+    }),
+    MedicinalStrength: z.string({
+        invalid_type_error: 'Incorrect medicine strength',
+    }),
 });
 
 
@@ -79,6 +96,8 @@ const CreateProductStock = FormSchema.omit({ id: true });
 
 // For update, you might want to remove some fields that shouldn't be updated
 const UpdateProductStock = FormSchema.omit({ id: true });
+
+const UpdateMasterList = FormSchemas.omit({ id: true });
 
 // This is temporary
 export type State = {
@@ -456,13 +475,39 @@ export async function updateProductStock(id: string, prevState: State, formData:
     redirect('/dashboard/stock-management');
 }
 
-export async function updateMasterList(id: string, prevState: State, formData: FormData) {
+export async function deleteMasterList(id: string) {
+    try {
+        await prisma.aDDOProduct.delete({
+            where: {
+                id: id
+            }
+        });
+        revalidatePath('/dashboard/stock-management')
+        redirect('/dashboard/stock-management')
+        return { message: 'deleted stock' };
+    } catch (error) {
+        throw error;
+    }
+
+}
+
+export type EState = {
+    errors?: {
+        genericname?: string[];
+        brandname?: string[];
+        MedicinalStrength?: string[];
+        DosageType?: string[];
+    };
+    message?: string | null;
+};
+
+export async function updateMasterList(id: string, prevState: EState, formData: FormData) {
     //validate data
-    const validatedFields = UpdateProductStock.safeParse({
-        genericName: formData.get('genericName'),
-        brandName: formData.get('brandName'),
-        MedicineStrength: formData.get('MedicineStrength'),
-        DosageType: formData.get('DosageType'),
+    const validatedFields = UpdateMasterList.safeParse({
+        genericname: formData.get('genericname'),
+        brandname: formData.get('brandname'),
+        MedicinalStrength: formData.get('MedicinalStrength'),
+        dosageType: formData.get('dosageType'),
     });
     if (!validatedFields.success) {
         const validationErrors = validatedFields.error.flatten().fieldErrors;
@@ -476,10 +521,10 @@ export async function updateMasterList(id: string, prevState: State, formData: F
         await prisma.aDDOProduct.update({
             where: { id: id },
             data: {
-                genericName: validatedFields.data.genericName,
-                brandName: validatedFields.data.brandName,
-                medicineStrength: validatedFields.data.MedicineStrength,
-                dosageType: validatedFields.data.DosageType
+                genericName: validatedFields.data.genericname,
+                brandName: validatedFields.data.brandname,
+                medicineStrength: validatedFields.data.MedicinalStrength,
+                dosageType: validatedFields.data.dosageType,
             }
         });
         console.log('Product updated successfully and redirect to another page');
@@ -490,6 +535,6 @@ export async function updateMasterList(id: string, prevState: State, formData: F
         };
     }
 
-    revalidatePath('/dashboard/master-list');
-    redirect('/dashboard/master-list');
+    revalidatePath('/dashboard/stock-management');
+    redirect('/dashboard/stock-management');
 }

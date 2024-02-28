@@ -35,17 +35,14 @@ export default function SalesLine(
                 const user = await getUser();
                 if (user?.roles === 'Supervisor') {
                     if (region && district && startDate && endDate) {
-                        // const cardData = await fetchCardDataSupervisorByAll(region, district, startDate, endDate);
-                        const cardData = await fetchSalesSupervisor('all', startDate, endDate, region, district);
-                        setSales(cardData);
+                        const saleData = await fetchSalesSupervisor('all', startDate, endDate, region, district);
+                        setSales(saleData);
                     } else if (region && startDate && endDate) {
-                        // const cardData = await fetchCardDataSupervisorByRegion(region, startDate, endDate);
-                        const cardData = await fetchSalesSupervisor('region', startDate, endDate, region, undefined);
-                        setSales(cardData);
+                        const saleData = await fetchSalesSupervisor('region', startDate, endDate, region, undefined);
+                        setSales(saleData);
                     } else if (startDate && endDate) {
-                        // const cardData = await fetchCardDataSupervisorByDates(startDate, endDate);
-                        const cardData = await fetchSalesSupervisor('dates', startDate, endDate, undefined, undefined);
-                        setSales(cardData);
+                        const saleData = await fetchSalesSupervisor('dates', startDate, endDate, undefined, undefined);
+                        setSales(saleData);
                     }
                 } else if (user?.roles === 'Owner') {
                     if (startDate && endDate) {

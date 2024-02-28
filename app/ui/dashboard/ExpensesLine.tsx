@@ -1,9 +1,8 @@
-import { formatDateToLocal, generateYAxis } from '@/app/lib/utils';
+import { formatDateToLocal } from '@/app/lib/utils';
 import { CalendarIcon } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchExpenses, fetchExpensesSupervisor, fetchExpensesSupervisors, fetchSalesSupervisor, getUser } from '@/app/lib/data';
+import { fetchExpenses, fetchExpensesSupervisor, fetchSales, fetchSalesSupervisor, getUser } from '@/app/lib/data';
 import { useEffect, useState } from 'react';
-
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -23,39 +22,61 @@ ChartJS.register(
     Tooltip
 );
 
+interface Expense {
+    date: string;
+    amount: number;
+}
+
+interface Sale {
+    sellingDate: string;
+    total: number;
+}
+
 export default function ExpensesLine(
     { region, district, startDate, endDate }: { region: string, district: string, startDate: string, endDate: string }
 ) {
-
-    const [expenses, setExpenses] = useState([]);
-
-    const [sales, setSales] = useState([]);
+    const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [sales, setSales] = useState<Sale[]>([]);
 
     useEffect(() => {
         try {
             const fetchData = async () => {
                 const user = await getUser();
+                let expensesData = [];
+                let salesData = [];
+
                 if (user?.roles === 'Supervisor') {
+
                     if (region && district && startDate && endDate) {
-                        // const cardData = await fetchCardDataSupervisorByAll(region, district, startDate, endDate);
-                        const cardData = await fetchExpensesSupervisor('all', startDate, endDate, region, district);
-                        setExpenses(cardData);
+                        expensesData = await fetchExpensesSupervisor('all', startDate, endDate, region, district);
                     } else if (region && startDate && endDate) {
-                        // const cardData = await fetchCardDataSupervisorByRegion(region, startDate, endDate);
-                        const cardData = await fetchExpensesSupervisor('region', startDate, endDate, region, undefined);
-                        setExpenses(cardData);
+                        expensesData = await fetchExpensesSupervisor('region', startDate, endDate, region, undefined);
                     } else if (startDate && endDate) {
-                        // const cardData = await fetchCardDataSupervisorByDates(startDate, endDate);
-                        const cardData = await fetchExpensesSupervisor('dates', startDate, endDate, undefined, undefined);
-                        setExpenses(cardData);
+                        expensesData = await fetchExpensesSupervisor('dates', startDate, endDate, undefined, undefined);
+                    }
+
+                    if (region && district && startDate && endDate) {
+                        salesData = await fetchSalesSupervisor('all', startDate, endDate, region, district);
+                    } else if (region && startDate && endDate) {
+                        salesData = await fetchSalesSupervisor('region', startDate, endDate, region, undefined);
+                    } else if (startDate && endDate) {
+                        salesData = await fetchSalesSupervisor('dates', startDate, endDate, undefined, undefined);
                     }
                 } else if (user?.roles === 'Owner') {
+
                     if (startDate && endDate) {
-                        const expenses = await fetchExpenses(startDate, endDate);
-                        setExpenses(expenses);
+                        expensesData = await fetchExpenses(startDate, endDate);
+                    }
+
+                    if (startDate && endDate) {
+                        salesData = await fetchSales(startDate, endDate);
                     }
                 }
+
+                setExpenses(expensesData);
+                setSales(salesData);
             };
+
             fetchData();
 
         } catch (error) {
@@ -63,15 +84,28 @@ export default function ExpensesLine(
         }
     }, [region, district, startDate, endDate]);
 
+    // Combine the date arrays from expenses and sales
+    const allDates = [...expenses.map(expense => new Date(expense.date)), ...sales.map(sale => new Date(sale.sellingDate))];
+
+    // Sort dates in ascending order and remove duplicates
+    const uniqueSortedDates = Array.from(new Set(allDates)).sort((a, b) => a.getTime() - b.getTime());
+
+    // Map amounts and totals to the sorted dates
     const data = {
-        labels: expenses.map(expense => formatDateToLocal(expense.date)),
+        labels: uniqueSortedDates.map(date => formatDateToLocal(date)),
         datasets: [
             {
-                data: expenses.map(expense => expense.amount),
+                label: 'Expenses',
+                data: uniqueSortedDates.map(date => expenses.find(expense => new Date(expense.date).getTime() === date.getTime())?.amount || 0),
                 backgroundColor: "rgba(49, 130, 206, 1)",
             },
+            {
+                label: 'Sales',
+                data: uniqueSortedDates.map(date => sales.find(sale => new Date(sale.sellingDate).getTime() === date.getTime())?.total || 0),
+                backgroundColor: "rgba(255, 99, 132, 1)",
+            }
         ],
-    }
+    };
 
     const options = {
         scales: {
@@ -90,7 +124,6 @@ export default function ExpensesLine(
             }
         }
     };
-
 
     return (
         <div className="w-full md:col-span-4">

@@ -15,7 +15,8 @@ import ExpensesBar from '@/app/ui/dashboard/ExpensesBar';
 import ExpensesDoughnut from '@/app/ui/dashboard/ExpenseDoug';
 import SalesLine from '@/app/ui/dashboard/SalesLine';
 import SalesBar from '@/app/ui/dashboard/SalesBar';
-
+import Image from 'next/image';
+import { FunnelIcon } from '@heroicons/react/24/outline';
 
 
 export default function Page() {
@@ -47,6 +48,7 @@ export default function Page() {
         return `${year}-${month}-${day}`;
     }
 
+    const [showFilters, setShowFilters] = useState(false);
     const [region, setRegion] = useState('');
     const [district, setDistrict] = useState('');
 
@@ -65,6 +67,10 @@ export default function Page() {
         setEndDate(endDate);
     }
 
+    const handleToggleFilters = () => {
+        setShowFilters(!showFilters);
+    };
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -80,21 +86,22 @@ export default function Page() {
     return (
         <>
             <main>
-                {user?.roles === 'Owner' ? (
-                    <Filter filterChange={handleFilter} />
-                ) : (
-                    <Header onFilterChange={handleFilterChange} />
-                )}
-
+                <div className="flex flex-row my-3 items-center gap-4">
+                    <button className="flex rounded-md bg-blue-500 w-50 h-7" onClick={handleToggleFilters}>
+                        <FunnelIcon className="h-6 w-9 text-white" />
+                        filters
+                    </button>
+                    {showFilters && (
+                        <div className="filters">
+                            {user?.roles === 'Owner' ? (
+                                <Filter filterChange={handleFilter} />
+                            ) : (
+                                <Header onFilterChange={handleFilterChange} />
+                            )}
+                        </div>
+                    )}
+                </div>
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    {/* <Card title="Collected" value={totalPaidInvoices} type="collected" />
-                    <Card title="Pending" value={totalPendingInvoices} type="pending" />
-                    <Card title="Total Invoices" value={numberOfInvoices} type="invoices" />
-                    <Card
-                        title="Total Customers"
-                        value={numberOfCustomers}
-                        type="customers"
-                    /> */}
                     <Suspense fallback={<CardsSkeleton />}>
                         <CardWrapper region={region} district={district} startDate={startDate} endDate={endDate} />
                     </Suspense>

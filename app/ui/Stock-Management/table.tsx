@@ -1,5 +1,5 @@
 'use client'
-import { UpdateStock, DeleteStock } from '@/app/ui/Stock-Management/buttons';
+import { UpdateStock, DeleteStock, DeleteMasterList } from '@/app/ui/Stock-Management/buttons';
 import { formatDateToLocal } from '@/app/lib/utils';
 import { fetchMasterList, fetchProductStock, getUser } from '@/app/lib/data';
 import { useEffect, useState } from 'react';
@@ -159,7 +159,7 @@ export default function ProductStockTable({
                       <td className="whitespace-nowrap py-3 pl-6 pr-3">
                         <div className="flex justify-end gap-3">
                           <UpdateStock id={productStock.id} />
-                          <DeleteStock id={productStock.id} />
+                          <DeleteMasterList id={productStock.id} />
                         </div>
                       </td>
                     </tr>

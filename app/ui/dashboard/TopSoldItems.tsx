@@ -1,6 +1,6 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchTopProductAddo, fetchTopProductSupervisor, fetchTopProductSupervisors, getUser } from '@/app/lib/data';
+import { fetchTopProductAddo, fetchTopProductSupervisor, getUser } from '@/app/lib/data';
 import { useEffect, useState } from 'react';
 export default async function TopSoldItems({ region, district, startDate, endDate }: { region: string, district: string, startDate: string, endDate: string }) {
 
@@ -11,12 +11,15 @@ export default async function TopSoldItems({ region, district, startDate, endDat
             try {
                 const user = await getUser();
                 if (user?.roles === 'Supervisor') {
-                    if (startDate && endDate && region && district) {
-                        const topProducts = await fetchTopProductSupervisor(region, district, startDate, endDate);
-                        setTopProducts(topProducts);
+                    if (region && district && startDate && endDate) {
+                        const products = await fetchTopProductSupervisor('all', startDate, endDate, region, district);
+                        setTopProducts(products);
+                    } else if (region && startDate && endDate) {
+                        const products = await fetchTopProductSupervisor('region', startDate, endDate, region, undefined);
+                        setTopProducts(products);
                     } else if (startDate && endDate) {
-                        const topProducts = await fetchTopProductSupervisors(startDate, endDate);
-                        setTopProducts(topProducts);
+                        const products = await fetchTopProductSupervisor('dates', startDate, endDate, undefined, undefined);
+                        setTopProducts(products);
                     }
                 }
                 else if (user?.roles === 'Owner') {

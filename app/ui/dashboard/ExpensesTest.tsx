@@ -12,9 +12,8 @@ import {
     PointElement,
     LineElement,
 } from "chart.js";
-import { fetchExpenses, fetchExpensesSupervisor, fetchExpensesSupervisors, fetchSalesSupervisor, getUser } from '@/app/lib/data';
-import { formatDateToLocal } from '@/app/lib/utils';
-import { start } from 'repl';
+import { fetchExpenses, fetchExpensesSupervisor, fetchSales, fetchSalesSupervisor, getUser } from '@/app/lib/data';
+import { formatDateToLocal, getEndOfMonth, getEndOfWeek, getStartOfMonth, getStartOfWeek, getWeeksInMonth } from '@/app/lib/utils';
 
 ChartJS.register(
     CategoryScale,
@@ -87,26 +86,98 @@ export default function ExpensesBar({ region, district, startDate, endDate }: { 
         }
     }, [region, district, startDate, endDate]);
 
-    // Combine the date arrays from expenses and sales
-    const allDates = [...expenses.map(expense => new Date(expense.date)), ...sales.map(sale => new Date(sale.sellingDate))];
+    // Determine if the range is within a single month or spans multiple months
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const startOfMonth = getStartOfMonth(start);
+    const endOfMonth = getEndOfMonth(end);
+    const weeksInMonth = getWeeksInMonth(startOfMonth);
 
-    // Sort dates in ascending order and remove duplicates
-    const uniqueSortedDates = Array.from(new Set(allDates)).sort((a, b) => a.getTime() - b.getTime());
+    const labels: string[] = [];
+    const datasets: { label: string, data: number[], backgroundColor: string }[] = [];
 
-    const data = {
-        labels: uniqueSortedDates.map(date => formatDateToLocal(date)),
-        datasets: [
-            {
+    if (weeksInMonth === 4) {
+        // If the range is within a single month, group data by weeks
+        let currentDate = startOfMonth;
+        while (currentDate <= endOfMonth) {
+            const startOfWeek = getStartOfWeek(currentDate);
+            const endOfWeek = getEndOfWeek(currentDate);
+            const weekLabel = `${formatDateToLocal(startOfWeek)} - ${formatDateToLocal(endOfWeek)}`;
+            labels.push(weekLabel);
+
+            const expenseTotal = expenses.reduce((total, expense) => {
+                const expenseDate = new Date(expense.date);
+                if (expenseDate >= startOfWeek && expenseDate <= endOfWeek) {
+                    total += expense.amount;
+                }
+                return total;
+            }, 0);
+
+            const saleTotal = sales.reduce((total, sale) => {
+                const saleDate = new Date(sale.sellingDate);
+                if (saleDate >= startOfWeek && saleDate <= endOfWeek) {
+                    total += sale.total;
+                }
+                return total;
+            }, 0);
+
+            datasets.push({
                 label: 'Expenses',
-                data: uniqueSortedDates.map(date => expenses.find(expense => new Date(expense.date).getTime() === date.getTime())?.amount || 0),
+                data: [expenseTotal],
                 backgroundColor: "rgba(49, 130, 206, 1)",
             },
-            {
-                label: 'Sales',
-                data: uniqueSortedDates.map(date => sales.find(sale => new Date(sale.sellingDate).getTime() === date.getTime())?.total || 0),
-                backgroundColor: "rgba(255, 99, 132, 1)",
-            }
-        ],
+                {
+                    label: 'Sales',
+                    data: [saleTotal],
+                    backgroundColor: "rgba(255, 99, 132, 1)",
+                });
+
+            currentDate = new Date(endOfWeek);
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+    } else {
+        // If the range spans multiple months, group data by months
+        let currentDate = startOfMonth;
+        while (currentDate <= endOfMonth) {
+            const startOfMonth = getStartOfMonth(currentDate);
+            const endOfMonth = getEndOfMonth(currentDate);
+            const monthLabel = `${startOfMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })}`;
+            labels.push(monthLabel);
+
+            const expenseTotal = expenses.reduce((total, expense) => {
+                const expenseDate = new Date(expense.date);
+                if (expenseDate >= startOfMonth && expenseDate <= endOfMonth) {
+                    total += expense.amount;
+                }
+                return total;
+            }, 0);
+
+            const saleTotal = sales.reduce((total, sale) => {
+                const saleDate = new Date(sale.sellingDate);
+                if (saleDate >= startOfMonth && saleDate <= endOfMonth) {
+                    total += sale.total;
+                }
+                return total;
+            }, 0);
+
+            datasets.push({
+                label: 'Expenses',
+                data: [expenseTotal],
+                backgroundColor: "rgba(49, 130, 206, 1)",
+            },
+                {
+                    label: 'Sales',
+                    data: [saleTotal],
+                    backgroundColor: "rgba(255, 99, 132, 1)",
+                });
+
+            currentDate.setMonth(currentDate.getMonth() + 1);
+        }
+    }
+
+    const data = {
+        labels,
+        datasets,
     };
 
     const options = {

@@ -70,3 +70,36 @@ export const generatePagination = (currentPage: number, totalPages: number) => {
     totalPages,
   ];
 };
+
+export function getWeeksInMonth(date: Date): number {
+  const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+  const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  const firstDayOfWeek = getStartOfWeek(firstDayOfMonth);
+  const lastDayOfWeek = getEndOfWeek(lastDayOfMonth);
+  return Math.ceil((lastDayOfWeek.getTime() - firstDayOfWeek.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+}
+
+export function getStartOfWeek(date: Date): Date {
+  const dayOfWeek = date.getDay();
+  const startOfWeek = new Date(date);
+  startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+  startOfWeek.setHours(0, 0, 0, 0);
+  return startOfWeek;
+}
+
+export function getEndOfWeek(date: Date): Date {
+  const dayOfWeek = date.getDay();
+  const endOfWeek = new Date(date);
+  endOfWeek.setDate(endOfWeek.getDate() + (6 - dayOfWeek));
+  endOfWeek.setHours(23, 59, 59, 999);
+  return endOfWeek;
+}
+
+export function getStartOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
+}
+
+export function getEndOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+}
+

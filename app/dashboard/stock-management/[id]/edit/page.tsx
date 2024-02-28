@@ -1,11 +1,9 @@
 import Form from '@/app/ui/Stock-Management/edit-form';
 import Breadcrumbs from '@/app/ui/Stock-Management/breadcrumbs';
-import { fetchProductStockAddoById } from '@/app/lib/data';
-import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Edit Invoice',
+    title: 'Edit Product',
 };
 
 export default async function Page({ params }: { params: { id: string } }) {
@@ -17,7 +15,7 @@ export default async function Page({ params }: { params: { id: string } }) {
                 breadcrumbs={[
                     { label: 'stock-management', href: '/dashboard/stock-management' },
                     {
-                        label: 'Edit Invoice',
+                        label: 'Edit Product',
                         href: `/dashboard/stock-management/${id}/edit`,
                         active: true,
                     },

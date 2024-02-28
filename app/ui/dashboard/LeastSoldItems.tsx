@@ -10,12 +10,15 @@ export default async function LeastSoldItems({ region, district, startDate, endD
             try {
                 const user = await getUser();
                 if (user?.roles === 'Supervisor') {
-                    if (startDate && endDate && region && district) {
-                        const leastProducts = await fetchLeastSoldProductsSupervisor(region, district, startDate, endDate);
-                        setLeastProducts(leastProducts);
+                    if (region && district && startDate && endDate) {
+                        const products = await fetchLeastSoldProductsSupervisor('all', startDate, endDate, region, district);
+                        setLeastProducts(products);
+                    } else if (region && startDate && endDate) {
+                        const products = await fetchLeastSoldProductsSupervisor('region', startDate, endDate, region, undefined);
+                        setLeastProducts(products);
                     } else if (startDate && endDate) {
-                        const leastProducts = await fetchLeastSoldProductsSupervisors(startDate, endDate);
-                        setLeastProducts(leastProducts);
+                        const products = await fetchLeastSoldProductsSupervisor('dates', startDate, endDate, undefined, undefined);
+                        setLeastProducts(products);
                     }
                 }
                 else if (user?.roles === 'Owner') {
